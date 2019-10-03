@@ -22,9 +22,6 @@ class AddUserService
 
     public function addUser(Request $request, ValidatorInterface $validator, EntityManagerInterface $entityManager)
     {
-
-        $serializer = new CustomUserSerializer();
-
         $user = new User();
 
         //Here, without Symfony's Form (see HOC2019_GIFTS-LB for Symfony Form Use)
@@ -65,6 +62,6 @@ class AddUserService
         // actually executes the queries (i.e. the INSERT query)
         $entityManager->flush();
 
-        return new JsonResponse($serializer->customUserSerializer()->serialize($user, 'json'));
+        return $user;
     }
 }

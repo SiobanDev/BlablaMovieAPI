@@ -31,7 +31,7 @@ class User implements UserInterface
      *      minMessage = "Your first name must be at least {{ limit }} characters long",
      *      maxMessage = "Your first name cannot be longer than {{ limit }} characters"
      * )
-     * @Assert\Regex("#[A-Z0-9]#")
+     * @Assert\Regex("#[A-Za-z0-9]#")
      */
     private $login;
 

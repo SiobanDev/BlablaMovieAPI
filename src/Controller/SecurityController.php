@@ -13,24 +13,25 @@ class SecurityController extends AbstractController
     /**
      * @Route("/login", name="app_login")
      * @param AuthenticationUtils $authenticationUtils
-     * @return JsonResponse
+     * @return string
      */
-    public function login(AuthenticationUtils $authenticationUtils): JsonResponse
+    public function login(AuthenticationUtils $authenticationUtils): Response
     {
-        // if ($this->getUser()) {
-        //    $this->redirectToRoute('target_path');
-        // }
+        if ($this->getUser()) {
+            $this->redirectToRoute('votation');
+        }
 
         // get the login error if there is one
         $error = $authenticationUtils->getLastAuthenticationError();
         // last username entered by the user
         $lastUsername = $authenticationUtils->getLastUsername();
 
-        if ($error === null) {
-            return new JsonResponse($lastUsername);
+        if (!$error) {
+            var_dump("user connecté : ", $this->getUser());
+            return new Response('lastusername : ' . $lastUsername);
         }
 
-        return new JsonResponse($error);
+        return new Response('error :' . $error);
     }
 
     /**
