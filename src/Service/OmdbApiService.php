@@ -2,44 +2,30 @@
 
 namespace App\Service;
 
-use http\Env\Response;
-use JMS\Serializer\Serializer;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
 class OmdbApiService
 {
-    private $omdbApiClient;
-    private $serializer;
-    private $apiKey;
-
-    public function __construct(Client $omdbApiClient, Serializer $serializer, $apiKey)
+    public function getMovies()
     {
-        $this->omdbApiClient = $omdbApiClient;
-        $this->serializer = $serializer;
-        $this->apiKey = $apiKey;
-    }
+        $apiKey = getenv('OMDB_API_KEY');
+        $client = HttpClient::create();
 
-    public function getCurrent()
-    {
-        $uri = 'http://www.omdbapi.com/?apikey=' . $this->apiKey . '&s=space';
-        // create curl resource
-        curl_init($uri);
+        try {
+            $response = $client->request('GET', 'http://www.omdbapi.com/?apikey=' . $apiKey . '&s=space');
 
-        $response = $this->omdbApiClient->get($uri);
+        } catch (TransportExceptionInterface $e) {
+            throw $e;
+        }
 
-        $data = $this->serializer->deserialize($response->getBody()->getContents(), 'array', 'json');
+        $statusCode = $response->getStatusCode();
 
-        return new Response($data);
+        if ($statusCode === 200) {
 
-        // set url 
-        curl_setopt($uri, CURLOPT_URL, "example.com");
+            $content = $response->getContent();
 
-        //return the transfer as a string 
-        curl_setopt($uri, CURLOPT_RETURNTRANSFER, 1);
-
-        // $output contains the output string 
-        $output = curl_exec($uri);
-
-        // close curl resource to free up system resources 
-        curl_close($uri);
+            return $content;
+        }
     }
 }

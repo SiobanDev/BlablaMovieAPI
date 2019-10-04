@@ -3,10 +3,12 @@
 namespace App\Controller;
 
 use App\Service\OmdbApiService;
+use http\Client;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Serializer\Serializer;
 
 class IndexController extends AbstractController
 {
@@ -23,7 +25,9 @@ class IndexController extends AbstractController
      */
     public function displayMovies()
     {
-        $omdbapiservice = new OmdbApiService();
-        return new JsonResponse();
+        $omdbapiService = new OmdbApiService();
+        $dataMovies = $omdbapiService->getMovies();
+
+        return new JsonResponse($dataMovies, 200, [], true);
     }
 }

@@ -2,8 +2,6 @@
 
 namespace App\Controller;
 
-use App\Entity\User;
-use App\Repository\UserRepository;
 use App\Service\User\AddUserService;
 use App\Service\User\CustomUserSerializer;
 use Cassandra\Type\UserType;
