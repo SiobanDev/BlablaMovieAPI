@@ -7,31 +7,29 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use Symfony\Component\Serializer\Serializer;
 
 class SecurityController extends AbstractController
 {
     /**
      * @Route("/login", name="app_login")
      * @param AuthenticationUtils $authenticationUtils
-     * @return string
+     * @param Serializer $serializer
+     * @return Response
      */
-    public function login(AuthenticationUtils $authenticationUtils): Response
+    public function login(AuthenticationUtils $authenticationUtils, Serializer $serializer): Response
     {
-        if ($this->getUser()) {
-            $this->redirectToRoute('votation');
-        }
 
+        $this->getUser();
         // get the login error if there is one
         $error = $authenticationUtils->getLastAuthenticationError();
         // last username entered by the user
         $lastUsername = $authenticationUtils->getLastUsername();
 
-        if (!$error) {
-            var_dump("user connecté : ", $this->getUser());
-            return new Response('lastusername : ' . $lastUsername);
-        }
+        $response = [$lastUsername, $error];
 
-        return new Response('error :' . $error);
+        return new JsonResponse($response, 'json');
+
     }
 
     /**

@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -81,6 +83,16 @@ class User implements UserInterface
      * @Assert\GreaterThanOrEqual("-16 years")
      */
     private $inscription_date;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\Vote", mappedBy="voter")
+     */
+    private $votations;
+
+    public function __construct()
+    {
+        $this->votations = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -192,6 +204,37 @@ class User implements UserInterface
     public function setInscriptionDate(\DateTimeInterface $inscription_date): self
     {
         $this->inscription_date = $inscription_date;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Vote[]
+     */
+    public function getVotations(): Collection
+    {
+        return $this->votations;
+    }
+
+    public function addVotation(Vote $votation): self
+    {
+        if (!$this->votations->contains($votation)) {
+            $this->votations[] = $votation;
+            $votation->setVoter($this);
+        }
+
+        return $this;
+    }
+
+    public function removeVotation(Vote $votation): self
+    {
+        if ($this->votations->contains($votation)) {
+            $this->votations->removeElement($votation);
+            // set the owning side to null (unless already changed)
+            if ($votation->getVoter() === $this) {
+                $votation->setVoter(null);
+            }
+        }
 
         return $this;
     }

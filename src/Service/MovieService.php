@@ -7,7 +7,7 @@ use Symfony\Component\Serializer\Serializer;
 
 class MovieService
 {
-    public function movieService()
+    public function displayMovies()
     {
         $serializer = new Serializer();
         $omdbApiService = new OmdbApiService();

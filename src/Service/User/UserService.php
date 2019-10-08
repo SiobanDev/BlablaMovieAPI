@@ -3,15 +3,13 @@
 namespace App\Service\User;
 
 use App\Entity\User;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Request;
 use DateTime;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-class AddUserService
+class UserService
 {
     private $passwordEncoder;
 
@@ -52,7 +50,7 @@ class AddUserService
              */
             $errorsString = (string)$errors;
 
-            return new Response($errorsString);
+            return $errorsString;
         }
 
         /* you can fetch the EntityManager via $this->getDoctrine()->getManager() or you can add an argument to the action: addUser(EntityManagerInterface $entityManager)

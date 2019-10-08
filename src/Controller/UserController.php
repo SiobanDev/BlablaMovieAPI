@@ -2,8 +2,7 @@
 
 namespace App\Controller;
 
-use App\Service\User\AddUserService;
-use App\Service\User\CustomUserSerializer;
+use App\Service\User\UserService;
 use Cassandra\Type\UserType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -56,11 +55,12 @@ class UserController extends AbstractController
         EntityManagerInterface $entityManager,
         UserPasswordEncoderInterface $passwordEncoder)
     {
-        $serializer = new CustomUserSerializer();
-        $userService = new AddUserService($passwordEncoder);
+
+        $userService = new UserService($passwordEncoder);
         $user = $userService->addUser($request, $validator, $entityManager);
 
-        return new JsonResponse($serializer->customUserSerializer()->serialize($user, 'json'), Response::HTTP_CREATED, [], true);
+        return new JsonResponse($this->serializer->serialize($user, 'json'), Response::HTTP_CREATED, [], true);
+        //return new JsonResponse($serializer->customUserSerializer()->serialize($user, 'json'), Response::HTTP_CREATED, [], true);
     }
 
 //    /**
