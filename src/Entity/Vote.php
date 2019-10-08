@@ -3,12 +3,16 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\VoteRepository")
  */
 class Vote
 {
+    const GROUP_SELF = "Vote::self";
+    const GROUP_VOTER = "Vote::voter";
+
     /**
      * @ORM\Id()
      * @ORM\GeneratedValue()
@@ -19,18 +23,23 @@ class Vote
     /**
      * @ORM\ManyToOne(targetEntity="App\Entity\User", inversedBy="votations")
      * @ORM\JoinColumn(nullable=false)
+     * @Groups({Vote::GROUP_VOTER})
      */
     private $voter;
 
     /**
+     * @var \DateTimeInterface
      * @ORM\Column(type="datetime")
+     * @Groups({Vote::GROUP_SELF})
      */
-    private $votation_date;
+    private $votationDate;
 
     /**
+     * @var string
      * @ORM\Column(type="string", length=255)
+     * @Groups({Vote::GROUP_SELF})
      */
-    private $movie_id;
+    private $movieId;
 
     public function getId(): ?int
     {
@@ -51,24 +60,24 @@ class Vote
 
     public function getVotationDate(): ?\DateTimeInterface
     {
-        return $this->votation_date;
+        return $this->votationDate;
     }
 
-    public function setVotationDate(\DateTimeInterface $votation_date): self
+    public function setVotationDate(\DateTimeInterface $votationDate): self
     {
-        $this->votation_date = $votation_date;
+        $this->votationDate = $votationDate;
 
         return $this;
     }
 
     public function getMovieId(): ?string
     {
-        return $this->movie_id;
+        return $this->movieId;
     }
 
-    public function setMovieId(string $movie_id): self
+    public function setMovieId(string $movieId): self
     {
-        $this->movie_id = $movie_id;
+        $this->movieId = $movieId;
 
         return $this;
     }

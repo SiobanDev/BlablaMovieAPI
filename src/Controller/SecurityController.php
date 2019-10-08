@@ -7,6 +7,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 
 class SecurityController extends AbstractController
@@ -14,11 +17,13 @@ class SecurityController extends AbstractController
     /**
      * @Route("/login", name="app_login")
      * @param AuthenticationUtils $authenticationUtils
-     * @param Serializer $serializer
      * @return Response
      */
-    public function login(AuthenticationUtils $authenticationUtils, Serializer $serializer): Response
+    public function login(AuthenticationUtils $authenticationUtils): Response
     {
+        $encoders = [new XmlEncoder(), new JsonEncoder()];
+        $normalizers = [new ObjectNormalizer()];
+        $serializer = new Serializer($normalizers, $encoders);
 
         $this->getUser();
         // get the login error if there is one
@@ -26,10 +31,9 @@ class SecurityController extends AbstractController
         // last username entered by the user
         $lastUsername = $authenticationUtils->getLastUsername();
 
-        $response = [$lastUsername, $error];
+        $response = ["lastUsername" => $lastUsername, "error" => $error];
 
-        return new JsonResponse($response, 'json');
-
+        return new JsonResponse($serializer->serialize($response, 'json'), 200, [], true);
     }
 
     /**

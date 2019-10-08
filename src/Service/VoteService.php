@@ -43,6 +43,5 @@ class VoteService
         $entityManager->flush();
 
         return $vote;
-
     }
 }

@@ -43,5 +43,5 @@ security:
         # the 'path' value can be any valid regular expression
         # (this one will match URLs like /api/post/7298 and /api/comment/528491)
         #- { path: ^/api/(post|comment)/\d+$, roles: ROLE_USER }
-        - { path: ^/login$, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/movies$, roles: ROLE_USER }
+        - { path: ^/$, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/movies$, roles: IS_AUTHENTICATED_REMEMBERED }
