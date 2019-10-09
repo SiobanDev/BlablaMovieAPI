@@ -26,12 +26,6 @@ services:
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
     app.omdbapi:
-        class: App\Service\OmdbApi
+        class: App\Service\OmdbApiService
         arguments:
-            - 'jms_serializer'
-            - omdbapi_api_key: aa5eb31b
-
-    get_set_method_normalizer:
-        class: Symfony\Component\Serializer\Normalizer\GetSetMethodNormalizer
-        public: false
-        tags: [serializer.normalizer]
+            - $apiKey: '%env(OMDB_API_KEY)%'

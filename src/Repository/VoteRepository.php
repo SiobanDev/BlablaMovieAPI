@@ -19,22 +19,21 @@ class VoteRepository extends ServiceEntityRepository
         parent::__construct($registry, Vote::class);
     }
 
-    // /**
-    //  * @return Vote[] Returns an array of Vote objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    /**
+     * @return Vote[] Returns an array of Vote objects
+     */
+
+    public function findByMovieId($value)
     {
         return $this->createQueryBuilder('v')
-            ->andWhere('v.exampleField = :val')
+            ->andWhere('v.movieId = :val')
             ->setParameter('val', $value)
             ->orderBy('v.id', 'ASC')
             ->setMaxResults(10)
             ->getQuery()
-            ->getResult()
-        ;
+            ->getResult();
     }
-    */
+
 
     /*
     public function findOneBySomeField($value): ?Vote

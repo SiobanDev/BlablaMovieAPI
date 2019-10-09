@@ -7,7 +7,6 @@
         "ext-iconv": "*",
         "doctrine/annotations": "^1.7",
         "friendsofsymfony/rest-bundle": "^2.5",
-        "jms/serializer-bundle": "^3.4",
         "sensio/framework-extra-bundle": "^5.4",
         "symfony/asset": "4.3.*",
         "symfony/console": "4.3.*",
@@ -32,9 +31,7 @@
         "symfony/validator": "4.3.*",
         "symfony/web-link": "4.3.*",
         "symfony/web-server-bundle": "4.3.*",
-        "symfony/yaml": "4.3.*",
-        "ext-http": "*",
-        "ext-cassandra": "*"
+        "symfony/yaml": "4.3.*"
     },
     "require-dev": {
         "symfony/debug-pack": "*",

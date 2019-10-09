@@ -4,17 +4,17 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Entity\Vote;
+use App\Repository\VoteRepository;
 use App\Service\OmdbApiService;
-use App\Service\User\CustomSerializer;
-use App\Service\VoteService;
+use App\Service\Vote\addVoteService;
+use App\Service\Vote\checkVoteService;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
-use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -41,12 +41,12 @@ class IndexController extends AbstractController
 
     /**
      * @Rest\Get("/movies", name="movies")
+     * @param OmdbApiService $omdbApiService
      * @return JsonResponse
      */
-    public function showMovies()
+    public function showMovies(OmdbApiService $omdbApiService)
     {
-        $omdbapiService = new OmdbApiService();
-        $moviesData = $omdbapiService->getMovies();
+        $moviesData = $omdbApiService->getMovies();
 
         return new JsonResponse(($this->serializer->serialize($moviesData, 'json')), 200, [], true);
     }
@@ -56,41 +56,43 @@ class IndexController extends AbstractController
      * @param Request $voteRequest
      * @param ValidatorInterface $validator
      * @param EntityManagerInterface $entityManager
-     * @param SerializerInterface $serializer
+     * @param VoteRepository $voteRepository
+     * @param checkVoteService $checkVoteService
+     * @param addVoteService $voteService
      * @return JsonResponse
      */
-    public function saveVote(Request $voteRequest, ValidatorInterface $validator, EntityManagerInterface $entityManager, CustomSerializer $serializer)
+    public function saveVote(
+        Request $voteRequest,
+        ValidatorInterface $validator,
+        EntityManagerInterface $entityManager,
+        VoteRepository $voteRepository,
+        checkVoteService $checkVoteService,
+        addVoteService $voteService
+    )
     {
-        $dateObjectUser = $this->getUser();
-        $normalizer = new DateTimeNormalizer();
-        $serializer1 = new Serializer([$normalizer]);
+        if ($checkVoteService) {
 
-        $dateObjectUser;
+            $voteData = $voteService->addVotation($voteRequest, $validator, $entityManager, $this->getUser(), $voteRepository);
 
-        $voteService = new VoteService();
-        $voteData = $voteService->addVotation($voteRequest, $validator, $entityManager, $user);
+            return new JsonResponse(
+                $this->serializer->serialize(
+                    $voteData,
+                    'json',
+                    [
+                        'groups' => [
+                            Vote::GROUP_SELF,
+                            Vote::GROUP_VOTER,
+                            User::GROUP_SELF,
+                        ]
+                    ]
+                ),
+                Response::HTTP_CREATED,
+                [],
+                true
+            );
+        }
 
-
-        //dd($this->getUser());
-
-        return new JsonResponse($serializer->customSerializer()->serialize($voteData, 'json', [
-            'groups' => [
-                Vote::GROUP_SELF,
-                Vote::GROUP_VOTER,
-                User::GROUP_SELF
-            ]
-        ]), 200, [], true);
-
-//        return new JsonResponse($serializer->serialize(
-//            $voteData,
-//            'json',
-//            [
-//                'groups' => [
-//                    Vote::GROUP_SELF,
-//                    Vote::GROUP_VOTER,
-//                    User::GROUP_SELF
-//                ]
-//            ]
-//        ), 200, [], true);
+        return new JsonResponse('Three votes have already be submitted. Wait the next week.', 'json');
     }
+
 }

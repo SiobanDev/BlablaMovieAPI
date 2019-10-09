@@ -3,13 +3,14 @@
 namespace App\Service\User;
 
 use App\Entity\User;
+use App\Repository\UserRepository;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-class UserService
+class addUserService
 {
     private $passwordEncoder;
 
@@ -18,7 +19,7 @@ class UserService
         $this->passwordEncoder = $passwordEncoder;
     }
 
-    public function addUser(Request $request, ValidatorInterface $validator, EntityManagerInterface $entityManager)
+    public function addUser(Request $request, ValidatorInterface $validator, EntityManagerInterface $entityManager, UserRepository $userRepository)
     {
         $user = new User();
 
@@ -33,7 +34,12 @@ class UserService
         ));
 
         $mail = $request->request->get('mail');
-        $user->setMail($mail);
+
+        $searchUserService = $userRepository->findByMail($mail);
+
+        if(!$searchUserService) {
+            $user->setMail($mail);
+        }
 
         $roles = $user->getRoles();
         $user->setRoles($roles);
