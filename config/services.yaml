@@ -4,6 +4,7 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
+    app.max_movie_constant: '%env(MAX_MOVIES_NUMB)%'
 
 services:
     # default configuration for services in *this* file
@@ -25,7 +26,7 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
-    app.omdbapi:
-        class: App\Service\OmdbApiService
+    App\Service\OmdbApiService:
         arguments:
-            - $apiKey: '%env(OMDB_API_KEY)%'
+            $apiKey: '%env(OMDB_API_KEY)%'
+

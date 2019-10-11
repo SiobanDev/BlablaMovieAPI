@@ -6,29 +6,30 @@ use App\Entity\User;
 use App\Entity\Vote;
 use App\Repository\VoteRepository;
 use App\Service\OmdbApiService;
-use App\Service\Vote\addVoteService;
-use App\Service\Vote\checkVoteService;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Service\Vote\CheckService;
+use App\Service\Vote\VoteService;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class IndexController extends AbstractController
 {
     private $serializer;
+    private $maxMoviesNumber;
 
     /**
      * UserController constructor.
-     * @param $serializer
+     * @param SerializerInterface $serializer
+     * @param $maxMoviesNumber
      */
-    public function __construct(SerializerInterface $serializer)
+    public function __construct(SerializerInterface $serializer, int $maxMoviesNumber)
     {
         $this->serializer = $serializer;
+        $this->maxMoviesNumber = $maxMoviesNumber;
     }
 
     /**
@@ -48,35 +49,38 @@ class IndexController extends AbstractController
     {
         $moviesData = $omdbApiService->getMovies();
 
-        return new JsonResponse(($this->serializer->serialize($moviesData, 'json')), 200, [], true);
+        return new JsonResponse($moviesData, 200, [], true);
     }
 
     /**
-     * @Rest\Post("/movies", name="vote")
-     * @param Request $voteRequest
+     * @Rest\Post("/votes", name="vote")
+     * @param Request $request
      * @param ValidatorInterface $validator
-     * @param EntityManagerInterface $entityManager
+     * @param VoteService $voteService
+     * @param CheckService $checkService
      * @param VoteRepository $voteRepository
-     * @param checkVoteService $checkVoteService
-     * @param addVoteService $voteService
      * @return JsonResponse
      */
-    public function saveVote(
-        Request $voteRequest,
+    public function manageVote(
+        Request $request,
         ValidatorInterface $validator,
-        EntityManagerInterface $entityManager,
-        VoteRepository $voteRepository,
-        checkVoteService $checkVoteService,
-        addVoteService $voteService
-    )
+        VoteService $voteService,
+        CheckService $checkService,
+        VoteRepository $voteRepository)
     {
-        if ($checkVoteService) {
+        //Allow to know if the user want to add or delete a vote
+        $connectedUser = $this->getUser();
+        $movieId = $request->request->get('imdbID');
+        $checkVote = $checkService->getWeekNumberVotations($voteRepository);
+        $adminEmail = $this->getParameter('app.admin_email');
 
-            $voteData = $voteService->addVotation($voteRequest, $validator, $entityManager, $this->getUser(), $voteRepository);
+        //To test with Postman, you need to set the key 'actionToDo' set to 'addVote' and the key 'imdbID' with an movie Id in the form-data.
+        if ($checkVote < $this->maxMoviesNumber) {
+            $addedVoteData = $voteService->addVotation($validator, $connectedUser, $movieId);
 
             return new JsonResponse(
                 $this->serializer->serialize(
-                    $voteData,
+                    $addedVoteData,
                     'json',
                     [
                         'groups' => [
@@ -90,9 +94,36 @@ class IndexController extends AbstractController
                 [],
                 true
             );
+        } //Don't allow the vote if the user has already voted three times in the current week (calendar week !)
+        else  {
+            return new JsonResponse('The user has already voted for three movies.', 400);
         }
+    }
 
-        return new JsonResponse('Three votes have already be submitted. Wait the next week.', 'json');
+    /**
+     * @Rest\Delete("/votes", name="vote")
+     * @param Request $request
+     * @param VoteService $voteService
+     * @return JsonResponse
+     */
+    public function removeVote(
+        Request $request,
+        VoteService $voteService)
+    {
+        //Allow to know if the user want to add or delete a vote
+        $connectedUser = $this->getUser();
+        $movieId = $request->request->get('imdbID');
+
+        $removedVoteData = $voteService->removeVotation($connectedUser, $movieId);
+
+        return new JsonResponse(
+            $this->serializer->serialize(
+                $removedVoteData,
+                'json'),
+            Response::HTTP_CREATED,
+            [],
+            true
+        );
     }
 
 }
