@@ -5,6 +5,7 @@ namespace App\Service\Vote;
 use App\Entity\Vote;
 use App\Repository\VoteRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class VoteService
@@ -20,44 +21,81 @@ class VoteService
         $this->entityManager = $entityManager;
     }
 
-    public function addVotation(ValidatorInterface $validator, $connectedUser, $movieId)
+    public function addVote(ValidatorInterface $validator, UserInterface $connectedUser, string $movieId, VoteRepository $voteRepository)
     {
+        $userId = $connectedUser->getId();
         $vote = new Vote();
         $currentDate = new \DateTime();
-        //$checkVote returns false if the user has already voted for three movies in the current week (calendar week !)
 
-        $vote->setMovieId($movieId);
+        //Get the vote with the same parameters as those from the request
+        $identicalVote = $voteRepository->findOneByMovieIdAndUserId($movieId, $userId);
 
-        //$dateTime->createFromFormat();
-        $vote->setVotationDate($currentDate);
-        $vote->setVoter($connectedUser);
+        //Check if there's already a vote with the same parameters as those from the request and prevent the creation if it's the case
+        if (is_null($identicalVote)) {
+            $vote->setMovieId($movieId);
 
-        $errors = $validator->validate($vote);
+            //$dateTime->createFromFormat();
+            $vote->setVotationDate($currentDate);
+            $vote->setVoter($connectedUser);
 
-        if (count($errors) > 0) {
-            /*
-             * Uses a __toString method on the $errors variable which is a ConstraintViolationList object. This gives us a nice string for debugging.
-             */
-            $errorsString = (string)$errors;
+            $errors = $validator->validate($vote);
 
-            return $errorsString;
+            if (count($errors) > 0) {
+                /*
+                 * Uses a __toString method on the $errors variable which is a ConstraintViolationList object. This gives us a nice string for debugging.
+                 */
+                $errorsString = (string)$errors;
+
+                return $errorsString;
+            }
+
+            // tell Doctrine you want to (eventually) save the vote (no queries yet)
+            $this->entityManager->persist($vote);
+
+            // actually executes the queries (i.e. the INSERT query)
+            $this->entityManager->flush();
+
+            $newVote = $voteRepository->findOneByMovieIdAndUserId($movieId, $userId);
+
+            return $newVote;
+
+        } else {
+
+            return "This user has already voted for this movie.";
         }
-
-        // tell Doctrine you want to (eventually) save the vote (no queries yet)
-        $this->entityManager->persist($vote);
-
-        // actually executes the queries (i.e. the INSERT query)
-        $this->entityManager->flush();
-
-        return $vote;
     }
 
-    public function removeVotation($connectedUser, $movieId)
+    public
+    function removeOneVote(VoteRepository $voteRepository, int $votationId, $connectedUser)
     {
-        $connectedUserId = $connectedUser->getId();
+        dump($connectedUser->getVotations());
+        $userId = $connectedUser->getId();
 
+        $voteToDelete = $voteRepository->findOneByIdAndUserId($votationId, $userId);
+
+        if (isset($voteToDelete)) {
+            $connectedUser->removeVotation($voteToDelete);
+            $this->entityManager->remove($voteToDelete);
+
+            // actually executes the queries (i.e. the INSERT query)
+            $this->entityManager->flush();
+
+            $deletedVoteResearch = $voteRepository->findOneByIdAndUserId($votationId, $userId);
+
+            return $deletedVoteResearch;
+
+        } else {
+
+            return "There is no vote to delete or you have no right to do it.";
+        }
+    }
+
+
+    public
+    function removeAllVotes($user)
+    {
         //$movieVotesToDelete is an array
-        $movieVotesToDelete = $this->voteRepository->findByVoterIdAndMovieId($connectedUserId, $movieId);
+        $movieVotesToDelete = $this->voteRepository->findByUser($user);
 
         foreach ($movieVotesToDelete as $movieVoteItem) {
 

@@ -19,12 +19,13 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class IndexController extends AbstractController
 {
     private $serializer;
+    //$maxMoviesNumber is set in service.yaml
     private $maxMoviesNumber;
 
     /**
      * UserController constructor.
      * @param SerializerInterface $serializer
-     * @param $maxMoviesNumber
+     * @param int $maxMoviesNumber
      */
     public function __construct(SerializerInterface $serializer, int $maxMoviesNumber)
     {
@@ -45,15 +46,17 @@ class IndexController extends AbstractController
      * @param OmdbApiService $omdbApiService
      * @return JsonResponse
      */
-    public function showMovies(OmdbApiService $omdbApiService)
+    public function toShowMovies(OmdbApiService $omdbApiService)
     {
-        $moviesData = $omdbApiService->getMovies();
+        $moviesData = $omdbApiService->showMovies();
 
         return new JsonResponse($moviesData, 200, [], true);
     }
 
     /**
-     * @Rest\Post("/votes", name="vote")
+     * To test the function with Postman, you need to set a 'imdbID' key in the body parameter form-data.
+     *
+     * @Rest\Post("/vote", name="add_vote")
      * @param Request $request
      * @param ValidatorInterface $validator
      * @param VoteService $voteService
@@ -61,69 +64,92 @@ class IndexController extends AbstractController
      * @param VoteRepository $voteRepository
      * @return JsonResponse
      */
-    public function manageVote(
+    public function toAddVote(
         Request $request,
         ValidatorInterface $validator,
         VoteService $voteService,
         CheckService $checkService,
         VoteRepository $voteRepository)
     {
-        //Allow to know if the user want to add or delete a vote
-        $connectedUser = $this->getUser();
+        $user = $this->getUser();
         $movieId = $request->request->get('imdbID');
-        $checkVote = $checkService->getWeekNumberVotations($voteRepository);
-        $adminEmail = $this->getParameter('app.admin_email');
+        //$checkVote is the number of votes for the connected user for the current week
+        $checkVote = $checkService->getWeekNumberVotations($voteRepository, $user);
 
-        //To test with Postman, you need to set the key 'actionToDo' set to 'addVote' and the key 'imdbID' with an movie Id in the form-data.
         if ($checkVote < $this->maxMoviesNumber) {
-            $addedVoteData = $voteService->addVotation($validator, $connectedUser, $movieId);
+            //Return a vote object in success and a string if no vote has been registered in the BDD
+            $newVoteResult = $voteService->addVote($validator, $this->getUser(), $movieId, $voteRepository);
 
-            return new JsonResponse(
-                $this->serializer->serialize(
-                    $addedVoteData,
-                    'json',
-                    [
-                        'groups' => [
-                            Vote::GROUP_SELF,
-                            Vote::GROUP_VOTER,
-                            User::GROUP_SELF,
+            if (is_object($newVoteResult)) {
+
+                return new JsonResponse(
+                    $this->serializer->serialize(
+                        $newVoteResult,
+                        'json',
+                        [
+                            'groups' => [
+                                Vote::GROUP_SELF,
+                                Vote::GROUP_VOTER,
+                                User::GROUP_SELF,
+                            ]
                         ]
-                    ]
-                ),
-                Response::HTTP_CREATED,
-                [],
-                true
-            );
+                    ),
+                    Response::HTTP_CREATED,
+                    [],
+                    true
+                );
+
+            } else if (is_string($newVoteResult)) {
+
+                return new JsonResponse($newVoteResult);
+
+            } else if (is_null($newVoteResult)) {
+
+                return new JsonResponse('The vote has not been well registered in the DBB.');
+
+            }
         } //Don't allow the vote if the user has already voted three times in the current week (calendar week !)
-        else  {
+        else {
             return new JsonResponse('The user has already voted for three movies.', 400);
         }
     }
 
     /**
-     * @Rest\Delete("/votes", name="vote")
+     * To test the function with Postman, you need to set a 'vote_id' key in the headers parameters
+     *
+     * @Rest\Delete("/vote", name="remove_vote")
      * @param Request $request
+     * @param VoteRepository $voteRepository
      * @param VoteService $voteService
      * @return JsonResponse
      */
-    public function removeVote(
+    public function toRemoveOneVote(
         Request $request,
-        VoteService $voteService)
+        VoteRepository $voteRepository,
+        VoteService $voteService
+    )
     {
-        //Allow to know if the user want to add or delete a vote
-        $connectedUser = $this->getUser();
-        $movieId = $request->request->get('imdbID');
+        $user = $this->getUser();
 
-        $removedVoteData = $voteService->removeVotation($connectedUser, $movieId);
+        $votationId = $request->headers->get('vote_id');
 
-        return new JsonResponse(
-            $this->serializer->serialize(
-                $removedVoteData,
-                'json'),
-            Response::HTTP_CREATED,
-            [],
-            true
-        );
+        $deletedVoteResult = $voteService->removeOneVote($voteRepository, $votationId, $user);
+
+        if (is_null($deletedVoteResult)) {
+
+            dd($user->getVotations());
+
+            return new JsonResponse(
+                null,
+                Response::HTTP_NO_CONTENT
+            );
+        } else if (is_string($deletedVoteResult)) {
+            return new JsonResponse($deletedVoteResult);
+        } else {
+            return new JsonResponse('The vote has not been well deleted from the DBB.');
+        }
+
+
     }
 
 }

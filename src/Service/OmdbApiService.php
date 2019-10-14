@@ -14,7 +14,7 @@ class OmdbApiService
         $this->apiKey = $apiKey;
     }
 
-    public function getMovies()
+    public function showMovies()
     {
         $client = HttpClient::create();
 

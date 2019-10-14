@@ -93,7 +93,7 @@ class User implements UserInterface
     private $inscriptionDate;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Entity\Vote", mappedBy="voter")
+     * @ORM\OneToMany(targetEntity="App\Entity\Vote", mappedBy="voter", orphanRemoval=true)
      * @Groups({User::GROUP_VOTATIONS})
      */
     private $votations;

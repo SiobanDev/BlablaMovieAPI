@@ -30,13 +30,14 @@ class CheckService
         return $lastDayOfTheWeek;
     }
 
-    public function getWeekNumberVotations(VoteRepository $voteRepository)
+    public function getWeekNumberVotations(VoteRepository $voteRepository, $user)
     {
+        $userId = $user->getId();
         //Get the sunday's date of the vote's week
         $sundayDate = $this->whichWeekService();
 
         //Get the votations of the week (in the DBB)
-        $votesOfTheWeek = $voteRepository->findByVotationDate($sundayDate);
+        $votesOfTheWeek = $voteRepository->findByVoteDateAndUserId($sundayDate, $userId);
 
         //Check if there is 3 votations in the week for the connected user
         return count($votesOfTheWeek);

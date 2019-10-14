@@ -44,7 +44,7 @@ class UserController extends AbstractController
     }
 
     /**
-     * @Rest\Post("/users/add")
+     * @Rest\Post("/user", name="add_user")
      * @param Request $request
      * @param ValidatorInterface $validator
      * @param EntityManagerInterface $entityManager
@@ -91,12 +91,40 @@ class UserController extends AbstractController
 //    }
 
     /**
-     * @Rest\Post("/votation", name="votation")
+     * @Rest\Delete("/user", name="delete_user")
+     * @param Request $request
+     * @param ValidatorInterface $validator
+     * @param EntityManagerInterface $entityManager
+     * @param UserPasswordEncoderInterface $passwordEncoder
+     * @param UserRepository $userRepository
+     * @return JsonResponse
      */
-    public function votation()
+    public function deleteCurrentUser(
+        Request $request,
+        ValidatorInterface $validator,
+        EntityManagerInterface $entityManager,
+        UserPasswordEncoderInterface $passwordEncoder,
+        UserRepository $userRepository
+    )
     {
-        //add an optional message - seen by developers
-        $this->denyAccessUnlessGranted('ROLE_USER', null, 'User tried to access a page without having ROLE_USER');
+
+        $userService = new UserService($passwordEncoder);
+        $user = $userService->deleteUser($request, $validator, $entityManager, $userRepository);
+
+        return new JsonResponse(
+            $this->serializer->serialize(
+                $user,
+                'json',
+                [
+                    'groups' => [
+                        User::GROUP_SELF,
+                    ]
+                ]
+            ),
+            Response::HTTP_CREATED,
+            [],
+            true
+        );
 
     }
 }
