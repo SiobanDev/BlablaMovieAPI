@@ -32,7 +32,8 @@
         "symfony/validator": "4.3.*",
         "symfony/web-link": "4.3.*",
         "symfony/web-server-bundle": "4.3.*",
-        "symfony/yaml": "4.3.*"
+        "symfony/yaml": "4.3.*",
+      "ext-cassandra": "*"
     },
     "require-dev": {
         "symfony/debug-pack": "*",

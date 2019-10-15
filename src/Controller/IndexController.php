@@ -8,6 +8,9 @@ use App\Repository\VoteRepository;
 use App\Service\OmdbApiService;
 use App\Service\Vote\CheckService;
 use App\Service\Vote\VoteService;
+use Cassandra\Exception\UnauthorizedException;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\NonUniqueResultException;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -120,36 +123,34 @@ class IndexController extends AbstractController
      * @Rest\Delete("/vote", name="remove_vote")
      * @param Request $request
      * @param VoteRepository $voteRepository
-     * @param VoteService $voteService
+     * @param EntityManagerInterface $entityManager
      * @return JsonResponse
+     * @throws NonUniqueResultException
      */
     public function toRemoveOneVote(
         Request $request,
         VoteRepository $voteRepository,
-        VoteService $voteService
+        EntityManagerInterface $entityManager
     )
     {
         $user = $this->getUser();
+        $userId = $user->getId();
 
         $votationId = $request->headers->get('vote_id');
 
-        $deletedVoteResult = $voteService->removeOneVote($voteRepository, $votationId, $user);
+        $voteToDelete = $voteRepository->findOneByIdAndUserId($votationId, $userId);
 
-        if (is_null($deletedVoteResult)) {
-
-            dd($user->getVotations());
-
-            return new JsonResponse(
-                null,
-                Response::HTTP_NO_CONTENT
-            );
-        } else if (is_string($deletedVoteResult)) {
-            return new JsonResponse($deletedVoteResult);
-        } else {
-            return new JsonResponse('The vote has not been well deleted from the DBB.');
+        if (is_null($voteToDelete)) {
+            throw new UnauthorizedException('There is no vote to delete or you have no right to do it.', 403, '');
         }
 
+        $user->removeVotation($voteToDelete);
+        $entityManager->flush();
+
+        return new JsonResponse(
+            null,
+            Response::HTTP_NO_CONTENT
+        );
 
     }
-
 }

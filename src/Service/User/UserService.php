@@ -82,14 +82,16 @@ class UserService
         VoteRepository $voteRepository,
         $user)
     {
-        $userId = $user->$request->request->get('id');
-        //First delete all the votes of the current user
+        $userId = $user->getId();
+
+        //First delete all the votes of the connected user
         $votesSearchResults = $voteRepository->findByUser($userId);
 
         foreach ($votesSearchResults as $votesSearchItem) {
+            $this->entityManager->remove($votesSearchItem);
 
+            $this->entityManager->flush();
         }
-
 
         //Then delete the user in the DBB
 
