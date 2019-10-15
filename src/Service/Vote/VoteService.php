@@ -2,6 +2,7 @@
 
 namespace App\Service\Vote;
 
+use App\Entity\User;
 use App\Entity\Vote;
 use App\Repository\VoteRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -31,7 +32,7 @@ class VoteService
         $identicalVote = $voteRepository->findOneByMovieIdAndUserId($movieId, $userId);
 
         //Check if there's already a vote with the same parameters as those from the request and prevent the creation if it's the case
-        if (is_null($identicalVote)) {
+        if (empty($identicalVote)) {
             $vote->setMovieId($movieId);
 
             //$dateTime->createFromFormat();
@@ -63,6 +64,15 @@ class VoteService
 
             return "This user has already voted for this movie.";
         }
+    }
+
+    public function displayWeekVotes($user)
+    {
+        $userId = $user->getId();
+        //$votesToDisplay is an array
+        $votesToDisplayResults = $this->checkService->getWeekVotations($this->voteRepository, $user);
+
+        return $votesToDisplayResults;
     }
 
     public function removeAllVotes($user)

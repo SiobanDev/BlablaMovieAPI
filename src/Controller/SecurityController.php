@@ -3,7 +3,7 @@
 namespace App\Controller;
 
 use App\Repository\UserRepository;
-use Cassandra\Exception\UnauthorizedException;
+use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -13,6 +13,7 @@ use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
+use Cassandra\Exception\UnauthorizedException;
 
 class SecurityController extends AbstractController
 {
@@ -21,6 +22,7 @@ class SecurityController extends AbstractController
      * @param AuthenticationUtils $authenticationUtils
      * @param UserRepository $userRepository
      * @return Response
+     * @throws Exception
      */
     public function login(AuthenticationUtils $authenticationUtils, UserRepository $userRepository): Response
     {
@@ -28,19 +30,17 @@ class SecurityController extends AbstractController
         $normalizers = [new ObjectNormalizer()];
         $serializer = new Serializer($normalizers, $encoders);
 
-        $user = $this->getUser();
-        $userId = $user->getId();
+        $response = $this->getUser();
+//        $userId = $user->getId();
         // get the login error if there is one
         $error = $authenticationUtils->getLastAuthenticationError();
         // last username entered by the user
         $lastUsername = $authenticationUtils->getLastUsername();
 
-        $response = ["lastUsername" => $lastUsername, "error" => $error];
+//        $response = ["lastUsername" => $lastUsername, "error" => $error];
 
-        $connectedUser = $userRepository->findOneById($userId);
-
-        if(is_null($connectedUser)) {
-            throw new UnauthorizedException('The user is no more connected.', Response::HTTP_FORBIDDEN, '');
+        if(is_null($response)) {
+            throw new Exception('The mail or the password are incorrect.', Response::HTTP_FORBIDDEN);
         }
 
         return new JsonResponse($serializer->serialize($response, 'json'), Response::HTTP_OK, [], true);
@@ -51,6 +51,7 @@ class SecurityController extends AbstractController
      */
     public function logout()
     {
-        throw new \Exception('You are no more connected.');
+        //throw new \Exception('You are no more connected.');
+        $this->redirect('accueil', Response::HTTP_PERMANENTLY_REDIRECT);
     }
 }

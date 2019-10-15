@@ -4,11 +4,10 @@ namespace App\Service\User;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
-use App\Repository\VoteRepository;
 use App\Service\Vote\VoteService;
-use Cassandra\Exception\UnauthorizedException;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -45,10 +44,10 @@ class UserService
         $userSearchResults = $userRepository->findByMail($mail);
 
         //Check if there is already a user with this email
-        if (is_null($userSearchResults)) {
+        if (empty($userSearchResults)) {
             $user->setMail($mail);
         } else {
-            throw new UnauthorizedException('The mail is already used for an account', 403, '');
+            throw new Exception('The mail is already used for an account', 403);
         }
 
         $roles = $user->getRoles();

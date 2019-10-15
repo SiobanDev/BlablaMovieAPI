@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\User\UserService;
 use App\Service\Vote\VoteService;
@@ -14,7 +13,6 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -64,6 +62,7 @@ class UserController extends AbstractController
      * @param Request $request
      * @param ValidatorInterface $validator
      * @return JsonResponse
+     * @throws \Exception
      */
     public function createNewUser(
         Request $request,
@@ -74,12 +73,7 @@ class UserController extends AbstractController
         return new JsonResponse(
             $this->serializer->serialize(
                 $user,
-                'json',
-                [
-                    'groups' => [
-                        User::GROUP_SELF,
-                    ]
-                ]
+                'json'
             ),
             Response::HTTP_CREATED,
             [],
@@ -88,19 +82,18 @@ class UserController extends AbstractController
     }
 
     /**
+     * Http verb DELETE don't need to return a JsonResponse !
+     *
      * @Rest\Delete("/user", name="delete_user")
      * @param VoteService $voteService
      * @param SecurityController $securityController
-     * @return JsonResponse
-     * @throws \Exception
+     * @return void
      */
     public function deleteCurrentUser(VoteService $voteService, SecurityController $securityController)
     {
         $user = $this->getUser();
         $deletingResult = $this->userService->deleteUser($this->entityManager, $this->userRepository, $voteService, $user);
 
-        return new JsonResponse($deletingResult, Response::HTTP_NO_CONTENT);
-
-
+        return $securityController->logout();
     }
 }
