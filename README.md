@@ -1,0 +1,1 @@
+You will need to create a .env.local file, containing the value of the OMDB API key and the maximum number of allowed votes in a week.
