@@ -193,6 +193,7 @@ class User implements UserInterface
     {
         $this->inscription_date = $inscription_date;
 
+
         return $this;
     }
 }
