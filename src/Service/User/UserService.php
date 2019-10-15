@@ -5,6 +5,8 @@ namespace App\Service\User;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Repository\VoteRepository;
+use App\Service\Vote\VoteService;
+use Cassandra\Exception\UnauthorizedException;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -42,8 +44,11 @@ class UserService
 
         $userSearchResults = $userRepository->findByMail($mail);
 
-        if (!$userSearchResults) {
+        //Check if there is already a user with this email
+        if (is_null($userSearchResults)) {
             $user->setMail($mail);
+        } else {
+            throw new UnauthorizedException('The mail is already used for an account', 403, '');
         }
 
         $roles = $user->getRoles();
@@ -75,44 +80,21 @@ class UserService
     }
 
     public function deleteUser(
-        Request $request,
-        ValidatorInterface $validator,
         EntityManagerInterface $entityManager,
         UserRepository $userRepository,
-        VoteRepository $voteRepository,
+        VoteService $voteService,
         $user)
     {
         $userId = $user->getId();
 
         //First delete all the votes of the connected user
-        $votesSearchResults = $voteRepository->findByUser($userId);
-
-        foreach ($votesSearchResults as $votesSearchItem) {
-            $this->entityManager->remove($votesSearchItem);
-
-            $this->entityManager->flush();
-        }
+        $voteService->removeAllVotes($user);
 
         //Then delete the user in the DBB
-
-
-        $errors = $validator->validate($user);
-        if (count($errors) > 0) {
-            /*
-             * Uses a __toString method on the $errors variable which is a ConstraintViolationList object. This gives us a nice string for debugging.
-             */
-            $errorsString = (string)$errors;
-
-            return $errorsString;
-        }
-
-        /* you can fetch the EntityManager via $this->getDoctrine()->getManager() or you can add an argument to the action: addUser(EntityManagerInterface $entityManager)
-        */
-        // tell Doctrine you want to (eventually) save the user (no queries yet)
-        $entityManager->persist($user);
-        // actually executes the queries (i.e. the INSERT query)
+        $userToDelete = $userRepository->findOneById($userId);
+        $entityManager->remove($userToDelete);
         $entityManager->flush();
 
-        return $user;
+        return 'The user has been well deleted.';
     }
 }

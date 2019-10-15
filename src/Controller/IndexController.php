@@ -113,7 +113,7 @@ class IndexController extends AbstractController
             }
         } //Don't allow the vote if the user has already voted three times in the current week (calendar week !)
         else {
-            return new JsonResponse('The user has already voted for three movies.', 400);
+            return new JsonResponse('The user has already voted for three movies.', Response::HTTP_BAD_REQUEST);
         }
     }
 
@@ -141,14 +141,14 @@ class IndexController extends AbstractController
         $voteToDelete = $voteRepository->findOneByIdAndUserId($votationId, $userId);
 
         if (is_null($voteToDelete)) {
-            throw new UnauthorizedException('There is no vote to delete or you have no right to do it.', 403, '');
+            throw new UnauthorizedException('There is no vote to delete or you have no right to do it.', Response::HTTP_FORBIDDEN, '');
         }
 
         $user->removeVotation($voteToDelete);
         $entityManager->flush();
 
         return new JsonResponse(
-            null,
+            'The vote has been well removed.',
             Response::HTTP_NO_CONTENT
         );
 

@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use App\Repository\UserRepository;
+use Cassandra\Exception\UnauthorizedException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,15 +19,17 @@ class SecurityController extends AbstractController
     /**
      * @Route("/login", name="app_login")
      * @param AuthenticationUtils $authenticationUtils
+     * @param UserRepository $userRepository
      * @return Response
      */
-    public function login(AuthenticationUtils $authenticationUtils): Response
+    public function login(AuthenticationUtils $authenticationUtils, UserRepository $userRepository): Response
     {
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
         $serializer = new Serializer($normalizers, $encoders);
 
-        $this->getUser();
+        $user = $this->getUser();
+        $userId = $user->getId();
         // get the login error if there is one
         $error = $authenticationUtils->getLastAuthenticationError();
         // last username entered by the user
@@ -33,7 +37,13 @@ class SecurityController extends AbstractController
 
         $response = ["lastUsername" => $lastUsername, "error" => $error];
 
-        return new JsonResponse($serializer->serialize($response, 'json'), 200, [], true);
+        $connectedUser = $userRepository->findOneById($userId);
+
+        if(is_null($connectedUser)) {
+            throw new UnauthorizedException('The user is no more connected.', Response::HTTP_FORBIDDEN, '');
+        }
+
+        return new JsonResponse($serializer->serialize($response, 'json'), Response::HTTP_OK, [], true);
     }
 
     /**
@@ -41,6 +51,6 @@ class SecurityController extends AbstractController
      */
     public function logout()
     {
-        throw new \Exception('This method can be blank - it will be intercepted by the logout key on your firewall');
+        throw new \Exception('You are no more connected.');
     }
 }

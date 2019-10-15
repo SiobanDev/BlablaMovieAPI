@@ -65,46 +65,18 @@ class VoteService
         }
     }
 
-//    public
-//    function removeOneVote(VoteRepository $voteRepository, int $votationId, $connectedUser)
-//    {
-//        dump($connectedUser->getVotations());
-//        $userId = $connectedUser->getId();
-//
-//        $voteToDelete = $voteRepository->findOneByIdAndUserId($votationId, $userId);
-//
-//        if (isset($voteToDelete)) {
-//            $connectedUser->removeVotation($voteToDelete);
-//            $this->entityManager->remove($voteToDelete);
-//
-//            // actually executes the queries (i.e. the INSERT query)
-//            $this->entityManager->flush();
-//
-//            $deletedVoteResearch = $voteRepository->findOneByIdAndUserId($votationId, $userId);
-//
-//            return $deletedVoteResearch;
-//
-//        } else {
-//
-//            return "There is no vote to delete or you have no right to do it.";
-//        }
-    }
-
-
-    public
-    function removeAllVotes($user)
+    public function removeAllVotes($user)
     {
-        //$movieVotesToDelete is an array
-        $movieVotesToDelete = $this->voteRepository->findByUser($user);
+        $userId = $user->getId();
+        //$votesToDelete is an array
+        $votesToDeleteResults = $this->voteRepository->findByUser($userId);
 
-        foreach ($movieVotesToDelete as $movieVoteItem) {
+        foreach ($votesToDeleteResults as $votesToDeleteItem) {
 
-            // tell Doctrine you want to (eventually) remove the vote (no queries yet)
-            $this->entityManager->remove($movieVoteItem);
+            $user->removeVotation($votesToDeleteItem);
             // actually executes the queries (i.e. the INSERT query)
             $this->entityManager->flush();
-
-            return $movieVoteItem;
         }
+        return null;
     }
 }

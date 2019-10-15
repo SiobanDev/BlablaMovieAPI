@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\User\UserService;
+use App\Service\Vote\VoteService;
 use Cassandra\Type\UserType;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations as Rest;
@@ -21,14 +22,27 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class UserController extends AbstractController
 {
     private $serializer;
+    private $entityManager;
+    private $userRepository;
+    private $userService;
 
     /**
      * UserController constructor.
-     * @param $serializer
+     * @param SerializerInterface $serializer
+     * @param EntityManagerInterface $entityManager
+     * @param UserRepository $userRepository
+     * @param UserService $userService
      */
-    public function __construct(SerializerInterface $serializer)
+    public function __construct(
+        SerializerInterface $serializer,
+        EntityManagerInterface $entityManager,
+        UserRepository $userRepository,
+        UserService $userService)
     {
         $this->serializer = $serializer;
+        $this->entityManager = $entityManager;
+        $this->userRepository = $userRepository;
+        $this->userService = $userService;
     }
 
     /**
@@ -44,23 +58,18 @@ class UserController extends AbstractController
     }
 
     /**
+     * To test the function with Postman, you need to set a mail and a password keys in the body parameters (form-data)
+     *
      * @Rest\Post("/user", name="add_user")
      * @param Request $request
      * @param ValidatorInterface $validator
-     * @param EntityManagerInterface $entityManager
-     * @param UserPasswordEncoderInterface $passwordEncoder
-     * @param UserRepository $userRepository
      * @return JsonResponse
      */
     public function createNewUser(
         Request $request,
-        ValidatorInterface $validator,
-        EntityManagerInterface $entityManager,
-        UserPasswordEncoderInterface $passwordEncoder,
-        UserRepository $userRepository)
+        ValidatorInterface $validator)
     {
-        $userService = new UserService($passwordEncoder);
-        $user = $userService->addUser($request, $validator, $entityManager, $userRepository);
+        $user = $this->userService->addUser($request, $validator, $this->entityManager, $this->userRepository);
 
         return new JsonResponse(
             $this->serializer->serialize(
@@ -78,53 +87,20 @@ class UserController extends AbstractController
         );
     }
 
-//    /**
-//     * @Rest\Get("/users", name="users_list")
-//     * @param UserRepository $userRepository
-//     * @return JsonResponse
-//     *
-//     */
-//    public function getAllUsers(UserRepository $userRepository)
-//    {
-//        $allUsersArray = $userRepository->findAll();
-//        return new JsonResponse($this->serializer->serialize($allUsersArray, 'json'));
-//    }
-
     /**
      * @Rest\Delete("/user", name="delete_user")
-     * @param Request $request
-     * @param ValidatorInterface $validator
-     * @param EntityManagerInterface $entityManager
-     * @param UserPasswordEncoderInterface $passwordEncoder
-     * @param UserRepository $userRepository
+     * @param VoteService $voteService
+     * @param SecurityController $securityController
      * @return JsonResponse
+     * @throws \Exception
      */
-    public function deleteCurrentUser(
-        Request $request,
-        ValidatorInterface $validator,
-        EntityManagerInterface $entityManager,
-        UserPasswordEncoderInterface $passwordEncoder,
-        UserRepository $userRepository
-    )
+    public function deleteCurrentUser(VoteService $voteService, SecurityController $securityController)
     {
+        $user = $this->getUser();
+        $deletingResult = $this->userService->deleteUser($this->entityManager, $this->userRepository, $voteService, $user);
 
-        $userService = new UserService($passwordEncoder);
-        $user = $userService->deleteUser($request, $validator, $entityManager, $userRepository);
+        return new JsonResponse($deletingResult, Response::HTTP_NO_CONTENT);
 
-        return new JsonResponse(
-            $this->serializer->serialize(
-                $user,
-                'json',
-                [
-                    'groups' => [
-                        User::GROUP_SELF,
-                    ]
-                ]
-            ),
-            Response::HTTP_CREATED,
-            [],
-            true
-        );
 
     }
 }
