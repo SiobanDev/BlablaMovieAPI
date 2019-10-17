@@ -5,13 +5,12 @@ namespace App\Service\Vote;
 
 use App\Repository\VoteRepository;
 
-class CheckService
+class WeekService
 {
 //Calculate the date of the week from a current date
-    public function whichWeekService()
+    public function whichWeek()
     {
-        $votationDate = new \DateTime();
-        $voteDatetoString = $votationDate->format('Y-m-d');
+        $voteDatetoString = (new \DateTime())->format('Y-m-d');
 
         //Function date() need a timestamp as second parameter and return the number of the calendar week based on the given date
         $timeStampVoteDate = strtotime($voteDatetoString);
@@ -28,29 +27,29 @@ class CheckService
         return $lastDayOfTheWeek;
     }
 
-    public function getWeekNumberVotations(VoteRepository $voteRepository, $user)
+    public function getWeekVotationsNumber(VoteRepository $voteRepository, $user)
     {
         $userId = $user->getId();
         //Get the sunday's date of the vote's week
-        $sundayDate = $this->whichWeekService();
+        $sundayDate = $this->whichWeek();
 
         //Get the votations of the week (in the DBB)
-        $votesOfTheWeek = $voteRepository->findByVoteDateAndUserId($sundayDate, $userId);
+        $votesOfTheWeekList = $voteRepository->findByVoteDateAndUserId($sundayDate, $userId);
 
         //Check if there is 3 votations in the week for the connected user
-        return count($votesOfTheWeek);
+        return count($votesOfTheWeekList);
     }
 
     public function getWeekVotations(VoteRepository $voteRepository, $user)
     {
         $userId = $user->getId();
         //Get the sunday's date of the vote's week
-        $sundayDate = $this->whichWeekService();
+        $sundayDate = $this->whichWeek();
 
         //Get the votations of the week (in the DBB)
-        $votesOfTheWeek = $voteRepository->findByVoteDateAndUserId($sundayDate, $userId);
+        $votesOfTheWeekList = $voteRepository->findByVoteDateAndUserId($sundayDate, $userId);
 
         //Check if there is 3 votations in the week for the connected user
-        return $votesOfTheWeek;
+        return $votesOfTheWeekList;
     }
 }

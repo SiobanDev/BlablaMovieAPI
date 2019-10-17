@@ -4,7 +4,7 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
 parameters:
-    app.max_movie_constant: '%env(MAX_MOVIES_NUMB)%'
+    app.max_movie: '%env(MAX_MOVIES_NUMB)%'
 
 services:
     # default configuration for services in *this* file
@@ -32,5 +32,5 @@ services:
 
     App\Controller\IndexController:
         arguments:
-            $maxMoviesNumber: '%app.max_movie_constant%'
+            $maxMoviesNumber: '%app.max_movie%'
 

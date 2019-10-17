@@ -5,11 +5,9 @@ namespace App\Controller;
 use App\Repository\UserRepository;
 use App\Service\User\UserService;
 use App\Service\Vote\VoteService;
-use Cassandra\Type\UserType;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -44,18 +42,6 @@ class UserController extends AbstractController
     }
 
     /**
-     * Using Symfony's Form
-     * Create a form in order to create a new User
-     * @param $user
-     * @return FormInterface
-     */
-    public function createFormNewUser($user)
-    {
-        $form = $this->createForm(Usertype::class, $user);
-        return $form;
-    }
-
-    /**
      * To test the function with Postman, you need to set a mail and a password keys in the body parameters (form-data)
      *
      * @Rest\Post("/user", name="add_user")
@@ -64,11 +50,11 @@ class UserController extends AbstractController
      * @return JsonResponse
      * @throws \Exception
      */
-    public function createNewUser(
+    public function create(
         Request $request,
         ValidatorInterface $validator)
     {
-        $user = $this->userService->addUser($request, $validator, $this->entityManager, $this->userRepository);
+        $user = $this->userService->add($request, $validator, $this->entityManager, $this->userRepository);
 
         return new JsonResponse(
             $this->serializer->serialize(
@@ -92,7 +78,8 @@ class UserController extends AbstractController
     public function deleteCurrentUser(VoteService $voteService, SecurityController $securityController)
     {
         $user = $this->getUser();
-        $deletingResult = $this->userService->deleteUser($this->entityManager, $this->userRepository, $voteService, $user);
+
+        $this->userService->delete($this->entityManager, $this->userRepository, $voteService, $user);
 
         return $securityController->logout();
     }

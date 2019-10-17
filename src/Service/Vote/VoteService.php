@@ -12,17 +12,17 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class VoteService
 {
     private $voteRepository;
-    private $checkService;
+    private $weekService;
     private $entityManager;
 
-    public function __construct(VoteRepository $voteRepository, CheckService $checkService, EntityManagerInterface $entityManager)
+    public function __construct(VoteRepository $voteRepository, WeekService $weekService, EntityManagerInterface $entityManager)
     {
         $this->voteRepository = $voteRepository;
-        $this->checkService = $checkService;
+        $this->weekService = $weekService;
         $this->entityManager = $entityManager;
     }
 
-    public function addVote(ValidatorInterface $validator, UserInterface $connectedUser, string $movieId, VoteRepository $voteRepository)
+    public function add(ValidatorInterface $validator, UserInterface $connectedUser, string $movieId, VoteRepository $voteRepository)
     {
         $userId = $connectedUser->getId();
         $vote = new Vote();
@@ -68,20 +68,19 @@ class VoteService
 
     public function displayWeekVotes($user)
     {
-        $userId = $user->getId();
         //$votesToDisplay is an array
-        $votesToDisplayResults = $this->checkService->getWeekVotations($this->voteRepository, $user);
+        $votesToDisplayList = $this->weekService->getWeekVotations($this->voteRepository, $user);
 
-        return $votesToDisplayResults;
+        return $votesToDisplayList;
     }
 
     public function removeAllVotes($user)
     {
         $userId = $user->getId();
         //$votesToDelete is an array
-        $votesToDeleteResults = $this->voteRepository->findByUser($userId);
+        $votesToDeleteList = $this->voteRepository->findByUser($userId);
 
-        foreach ($votesToDeleteResults as $votesToDeleteItem) {
+        foreach ($votesToDeleteList as $votesToDeleteItem) {
 
             $user->removeVotation($votesToDeleteItem);
             // actually executes the queries (i.e. the INSERT query)

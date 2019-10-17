@@ -21,7 +21,7 @@ class UserService
         $this->passwordEncoder = $passwordEncoder;
     }
 
-    public function addUser(
+    public function add(
         Request $request,
         ValidatorInterface $validator,
         EntityManagerInterface $entityManager,
@@ -78,7 +78,7 @@ class UserService
         return $user;
     }
 
-    public function deleteUser(
+    public function delete(
         EntityManagerInterface $entityManager,
         UserRepository $userRepository,
         VoteService $voteService,

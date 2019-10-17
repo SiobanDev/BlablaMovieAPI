@@ -20,5 +20,5 @@
 ###< symfony/web-server-bundle ###
 
 .DS_Store
-/.idea/
+.idea/*
 
