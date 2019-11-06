@@ -24,10 +24,7 @@ class VoteController extends AbstractController
     //$maxMoviesNumber is set in service.yaml
     private $maxMoviesNumber;
     private $voteService;
-    /**
-     * @var Request
-     */
-    private $request;
+
     /**
      * @var VoteRepository
      */
@@ -45,13 +42,11 @@ class VoteController extends AbstractController
         int $maxMoviesNumber,
         SerializerInterface $serializer,
         VoteService $voteService,
-        Request $request,
         VoteRepository $voteRepository)
     {
         $this->serializer = $serializer;
         $this->maxMoviesNumber = $maxMoviesNumber;
         $this->voteService = $voteService;
-        $this->request = $request;
         $this->voteRepository = $voteRepository;
     }
 
@@ -64,13 +59,14 @@ class VoteController extends AbstractController
      * @return JsonResponse
      */
     public function add(
+        Request $request,
         ValidatorInterface $validator,
         WeekService $checkService
     )
     {
         $user = $this->getUser();
 
-        $movieId = $this->request->request->get('imdbID');
+        $movieId = $request->request->get('imdbID');
         //$checkVote is the number of votes for the connected user for the current week
         $checkVote = $checkService->getWeekVotationsNumber($this->voteRepository, $user);
 
@@ -154,6 +150,7 @@ class VoteController extends AbstractController
      * @throws Exception
      */
     public function removeOne(
+        Request $request,
         EntityManagerInterface $entityManager,
         WeekService $checkService
     )
@@ -161,8 +158,8 @@ class VoteController extends AbstractController
         $user = $this->getUser();
         $userId = $user->getId();
         $actionDay = new \DateTime();
-        $votationDate = $this->request->headers->get('votation_date');
-        $votationId = $this->request->headers->get('vote_id');
+        $votationDate = $request->headers->get('votation_date');
+        $votationId = $request->headers->get('vote_id');
         $voteToDelete = $this->voteRepository->findOneByIdAndUserId($votationId, $userId);
 
         //Check if the vote to delete is in the BDD

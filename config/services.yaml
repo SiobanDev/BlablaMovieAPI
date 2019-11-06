@@ -30,7 +30,7 @@ services:
         arguments:
             $apiKey: '%env(OMDB_API_KEY)%'
 
-    App\Controller\IndexController:
+    App\Controller\VoteController:
         arguments:
             $maxMoviesNumber: '%app.max_movie%'
 

@@ -10,7 +10,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 class MovieController extends AbstractController
 {
     /**
-     * To test the function with Postman, you need to set a 'page' key in the query params.
      *
      * @Rest\Get("/movies", name="movies")
      * @param OmdbApiService $omdbApiService
