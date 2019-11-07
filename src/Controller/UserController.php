@@ -43,7 +43,6 @@ class UserController extends AbstractController
 
     /**
      * To test the function with Postman, you need to set a mail and a password keys in the body parameters (form-data)
-     *
      * @Rest\Post("/user", name="add_user")
      * @param Request $request
      * @param ValidatorInterface $validator
