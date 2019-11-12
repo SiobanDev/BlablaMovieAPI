@@ -6,11 +6,13 @@ use App\Repository\UserRepository;
 use App\Service\User\UserService;
 use App\Service\Vote\VoteService;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -47,7 +49,7 @@ class UserController extends AbstractController
      * @param Request $request
      * @param ValidatorInterface $validator
      * @return JsonResponse
-     * @throws \Exception
+     * @throws Exception
      */
     public function create(
         Request $request,
@@ -81,5 +83,31 @@ class UserController extends AbstractController
         $this->userService->delete($this->entityManager, $this->userRepository, $voteService, $user);
 
         return $securityController->logout();
+    }
+
+    /**
+     * @Rest\Get("/users/me", name="connected_user")
+     * @return JsonResponse
+     * @throws Exception
+     */
+    public function getConnectedUser()
+    {
+        if($this->getUser()) {
+            $user = $this->getUser();
+
+            return new JsonResponse(
+                $this->serializer->serialize(
+                    [
+                        "username" => $user->getLogin()
+
+                    ],
+                    'json'
+                ),
+                Response::HTTP_OK,
+                [],
+                true
+            );
+        }
+        throw new Exception('YOU ARE NOT CONNECTED.', Response::HTTP_FORBIDDEN);
     }
 }
