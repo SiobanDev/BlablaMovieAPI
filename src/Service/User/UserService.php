@@ -59,13 +59,16 @@ class UserService
         $user->setInscriptionDate(new DateTime());
 
         $errors = $validator->validate($user);
+        var_dump($errors);
         if (count($errors) > 0) {
             /*
              * Uses a __toString method on the $errors variable which is a ConstraintViolationList object. This gives us a nice string for debugging.
              */
-            $errorsString = (string)$errors;
-
-            return $errorsString;
+//            $errorsString = (string)$errors;
+//
+//            throw new Exception($errorsString);
+            $user = null;
+            return $user;
         }
 
         /* you can fetch the EntityManager via $this->getDoctrine()->getManager() or you can add an argument to the action: addUser(EntityManagerInterface $entityManager)

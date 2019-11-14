@@ -119,7 +119,7 @@ class VoteController extends AbstractController
                 ]
             );
 
-            return new JsonResponse('The user has already voted for three movies : ' . $weekVotesJson, Response::HTTP_BAD_REQUEST, [], true);
+            return new JsonResponse('The user has already voted for three movies : ' . $weekVotesJson, Response::HTTP_FORBIDDEN, [], true);
         }
     }
 

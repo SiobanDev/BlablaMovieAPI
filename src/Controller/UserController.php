@@ -12,7 +12,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -57,6 +56,20 @@ class UserController extends AbstractController
     {
         $user = $this->userService->add($request, $validator, $this->entityManager, $this->userRepository);
 
+        if(!$user) {
+            return new JsonResponse(
+                $this->serializer->serialize(
+                    [
+                        "message" => 'DATA DO NOT RESPECT CONSTRAINTS'
+                    ],
+                    'json'
+                ),
+                Response::HTTP_FORBIDDEN,
+                [],
+                true
+            );
+        }
+
         return new JsonResponse(
             $this->serializer->serialize(
                 $user,
@@ -66,6 +79,9 @@ class UserController extends AbstractController
             [],
             true
         );
+
+
+
     }
 
     /**
@@ -99,7 +115,6 @@ class UserController extends AbstractController
                 $this->serializer->serialize(
                     [
                         "username" => $user->getLogin()
-
                     ],
                     'json'
                 ),
@@ -108,6 +123,17 @@ class UserController extends AbstractController
                 true
             );
         }
-        throw new Exception('YOU ARE NOT CONNECTED.', Response::HTTP_FORBIDDEN);
+
+        return new JsonResponse(
+            $this->serializer->serialize(
+                [
+                    "message" => 'YOU ARE NOT CONNECTED.'
+                ],
+                'json'
+            ),
+            Response::HTTP_FORBIDDEN,
+            [],
+            true
+        );
     }
 }

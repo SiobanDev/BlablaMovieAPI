@@ -40,7 +40,7 @@ class SecurityController extends AbstractController
 //        $response = ["lastUsername" => $lastUsername, "error" => $error];
 
         if(is_null($response)) {
-            throw new Exception('The mail or the password are incorrect.', Response::HTTP_FORBIDDEN);
+            return new JsonResponse('The mail or the password is incorrect.' . $error, Response::HTTP_FORBIDDEN);
         }
 
         return new JsonResponse($serializer->serialize($response, 'json'), Response::HTTP_OK, [], true);
