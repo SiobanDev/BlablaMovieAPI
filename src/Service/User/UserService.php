@@ -9,6 +9,8 @@ use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -21,6 +23,14 @@ class UserService
         $this->passwordEncoder = $passwordEncoder;
     }
 
+    /**
+     * @param Request $request
+     * @param ValidatorInterface $validator
+     * @param EntityManagerInterface $entityManager
+     * @param UserRepository $userRepository
+     * @return User|null
+     * @throws Exception
+     */
     public function add(
         Request $request,
         ValidatorInterface $validator,
@@ -47,7 +57,7 @@ class UserService
         if (empty($userSearchResults)) {
             $user->setMail($mail);
         } else {
-            throw new Exception('The mail is already used for an account', 403);
+            throw new Exception('The mail is already used for an account',403);
         }
 
         $roles = $user->getRoles();
@@ -59,7 +69,7 @@ class UserService
         $user->setInscriptionDate(new DateTime());
 
         $errors = $validator->validate($user);
-        var_dump($errors);
+
         if (count($errors) > 0) {
             /*
              * Uses a __toString method on the $errors variable which is a ConstraintViolationList object. This gives us a nice string for debugging.
@@ -68,7 +78,7 @@ class UserService
 //
 //            throw new Exception($errorsString);
             $user = null;
-            return $user;
+            throw new Exception('incorrect user data',403);
         }
 
         /* you can fetch the EntityManager via $this->getDoctrine()->getManager() or you can add an argument to the action: addUser(EntityManagerInterface $entityManager)

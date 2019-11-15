@@ -5,8 +5,8 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Entity\Vote;
 use App\Repository\VoteRepository;
-use App\Service\Vote\WeekService;
 use App\Service\Vote\VoteService;
+use App\Service\Vote\WeekService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\NonUniqueResultException;
 use Exception;
@@ -35,7 +35,6 @@ class VoteController extends AbstractController
      * @param int $maxMoviesNumber
      * @param SerializerInterface $serializer
      * @param VoteService $voteService
-     * @param Request $request
      * @param VoteRepository $voteRepository
      */
     public function __construct(
@@ -54,9 +53,11 @@ class VoteController extends AbstractController
      * To test the function with Postman, you need to set a 'imdbID' key in the body parameter form-data.
      *
      * @Rest\Post("/vote", name="add_vote")
+     * @param Request $request
      * @param ValidatorInterface $validator
      * @param WeekService $checkService
      * @return JsonResponse
+     * @throws Exception
      */
     public function add(
         Request $request,
@@ -68,59 +69,56 @@ class VoteController extends AbstractController
 
         $movieId = $request->request->get('imdbID');
         //$checkVote is the number of votes for the connected user for the current week
-        $checkVote = $checkService->getWeekVotationsNumber($this->voteRepository, $user);
+        try {
+
+            $checkVote = $checkService->getWeekVotationsNumber($this->voteRepository, $user);
+
+        } catch (\Exception $e) {
+
+            throw new Exception();
+        }
 
         if ($checkVote < $this->maxMoviesNumber) {
             //Return a vote object in success and a string if no vote has been registered in the BDD
-            $newVoteResult = $this->voteService->add($validator, $this->getUser(), $movieId, $this->voteRepository);
 
-            if (is_object($newVoteResult)) {
+            try {
 
-                return new JsonResponse(
-                    $this->serializer->serialize(
-                        $newVoteResult,
-                        'json',
-                        [
-                            'groups' => [
-                                Vote::GROUP_SELF,
-                                Vote::GROUP_VOTER,
-                                User::GROUP_SELF,
-                            ]
-                        ]
-                    ),
-                    Response::HTTP_CREATED,
-                    [],
-                    true
-                );
+                $newVoteResult = $this->voteService->add($validator, $this->getUser(), $movieId, $this->voteRepository);
 
-            } else if (is_string($newVoteResult)) {
+            } catch (\Exception $e) {
 
-                return new JsonResponse($newVoteResult);
-
-            } else if (empty($newVoteResult)) {
-
-                return new JsonResponse('The vote has not been well registered in the DBB.');
-
+                throw new Exception($e);
             }
-        } //Don't allow the vote if the user has already voted three times in the current week (calendar week !)
-        else {
 
-            $weekVotes = $checkService->getWeekVotations($this->voteRepository, $user);
-
-            $weekVotesJson = $this->serializer->serialize(
-                $weekVotes,
-                'json',
-                [
-                    'groups' => [
-                        Vote::GROUP_SELF,
-                        Vote::GROUP_VOTER,
-                        User::GROUP_SELF,
+            return new JsonResponse(
+                $this->serializer->serialize(
+                    $newVoteResult,
+                    'json',
+                    [
+                        'groups' => [
+                            Vote::GROUP_SELF,
+                            Vote::GROUP_VOTER,
+                            User::GROUP_SELF,
+                        ]
                     ]
-                ]
+                ),
+                Response::HTTP_CREATED,
+                [],
+                true
             );
-
-            return new JsonResponse('The user has already voted for three movies : ' . $weekVotesJson, Response::HTTP_FORBIDDEN, [], true);
         }
+
+        return new JsonResponse(
+            $this->serializer->serialize(
+                [
+                    "message" => 'YOU CAN NOT VOTE'
+                ],
+                'json'
+            ),
+            Response::HTTP_FORBIDDEN,
+            [],
+            true
+        );
     }
 
     /**
@@ -129,7 +127,8 @@ class VoteController extends AbstractController
      * @Rest\Get("/votes", name="all_votes")
      * @return JsonResponse
      */
-    public function displayAll()
+    public
+    function displayAll()
     {
         $user = $this->getUser();
         $displayAllVotes = $this->voteService->displayWeekVotes($user);
@@ -149,7 +148,8 @@ class VoteController extends AbstractController
      * @throws NonUniqueResultException
      * @throws Exception
      */
-    public function removeOne(
+    public
+    function removeOne(
         Request $request,
         EntityManagerInterface $entityManager,
         WeekService $checkService

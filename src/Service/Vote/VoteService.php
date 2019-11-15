@@ -6,6 +6,8 @@ use App\Entity\User;
 use App\Entity\Vote;
 use App\Repository\VoteRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\NonUniqueResultException;
+use Exception;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -22,6 +24,14 @@ class VoteService
         $this->entityManager = $entityManager;
     }
 
+    /**
+     * @param ValidatorInterface $validator
+     * @param UserInterface $connectedUser
+     * @param string $movieId
+     * @param VoteRepository $voteRepository
+     * @return Vote|string|null
+     * @throws Exception
+     */
     public function add(ValidatorInterface $validator, UserInterface $connectedUser, string $movieId, VoteRepository $voteRepository)
     {
         $userId = $connectedUser->getId();
@@ -45,9 +55,11 @@ class VoteService
                 /*
                  * Uses a __toString method on the $errors variable which is a ConstraintViolationList object. This gives us a nice string for debugging.
                  */
-                $errorsString = (string)$errors;
+//                $errorsString = (string)$errors;
 
-                return $errorsString;
+                $vote = null;
+                throw new Exception('incorrect vote data',500);
+
             }
 
             // tell Doctrine you want to (eventually) save the vote (no queries yet)
@@ -62,7 +74,7 @@ class VoteService
 
         } else {
 
-            return "This user has already voted for this movie.";
+            throw new Exception("This user has already voted for this movie.", 403);
         }
     }
 

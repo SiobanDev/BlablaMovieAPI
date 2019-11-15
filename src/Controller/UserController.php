@@ -6,6 +6,7 @@ use App\Repository\UserRepository;
 use App\Service\User\UserService;
 use App\Service\Vote\VoteService;
 use Doctrine\ORM\EntityManagerInterface;
+use Error;
 use Exception;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -54,13 +55,15 @@ class UserController extends AbstractController
         Request $request,
         ValidatorInterface $validator)
     {
-        $user = $this->userService->add($request, $validator, $this->entityManager, $this->userRepository);
+        try{
+            $user = $this->userService->add($request, $validator, $this->entityManager, $this->userRepository);
 
-        if(!$user) {
+        } catch (\Exception $e) {
+
             return new JsonResponse(
                 $this->serializer->serialize(
                     [
-                        "message" => 'DATA DO NOT RESPECT CONSTRAINTS'
+                        "message" => 'DATA DO NOT RESPECT CONSTRAINTS ' . $e->getMessage()
                     ],
                     'json'
                 ),
@@ -79,9 +82,6 @@ class UserController extends AbstractController
             [],
             true
         );
-
-
-
     }
 
     /**
