@@ -108,8 +108,9 @@ class UserController extends AbstractController
      */
     public function getConnectedUser()
     {
-        if($this->getUser()) {
-            $user = $this->getUser();
+        $user = $this->getUser();
+
+        if($user) {
 
             return new JsonResponse(
                 $this->serializer->serialize(

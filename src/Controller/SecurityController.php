@@ -26,24 +26,31 @@ class SecurityController extends AbstractController
      */
     public function login(AuthenticationUtils $authenticationUtils, UserRepository $userRepository): Response
     {
-        $encoders = [new XmlEncoder(), new JsonEncoder()];
-        $normalizers = [new ObjectNormalizer()];
-        $serializer = new Serializer($normalizers, $encoders);
-
-        $response = $this->getUser();
-//        $userId = $user->getId();
         // get the login error if there is one
         $error = $authenticationUtils->getLastAuthenticationError();
         // last username entered by the user
         $lastUsername = $authenticationUtils->getLastUsername();
 
-//        $response = ["lastUsername" => $lastUsername, "error" => $error];
+        return new JsonResponse($lastUsername);
 
-        if(is_null($response)) {
-            return new JsonResponse('The mail or the password is incorrect.' . $error, Response::HTTP_FORBIDDEN);
-        }
-
-        return new JsonResponse($serializer->serialize($response, 'json'), Response::HTTP_OK, [], true);
+//        $encoders = [new XmlEncoder(), new JsonEncoder()];
+//        $normalizers = [new ObjectNormalizer()];
+//        $serializer = new Serializer($normalizers, $encoders);
+//
+//        $response = $this->getUser();
+////      $userId = $user->getId();
+//        // get the login error if there is one
+//        $error = $authenticationUtils->getLastAuthenticationError();
+//        // last username entered by the user
+//        $lastUsername = $authenticationUtils->getLastUsername();
+//
+////      $response = ["lastUsername" => $lastUsername, "error" => $error];
+//
+//        if(is_null($response)) {
+//            return new JsonResponse('The mail or the password is incorrect.' . $error, Response::HTTP_FORBIDDEN);
+//        }
+//
+//        return new JsonResponse($serializer->serialize($response, 'json'), Response::HTTP_OK, [], true);
     }
 
     /**

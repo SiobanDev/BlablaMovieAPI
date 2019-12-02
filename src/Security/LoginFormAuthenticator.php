@@ -7,6 +7,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
@@ -19,6 +20,7 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 //use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Guard\Authenticator\AbstractFormLoginAuthenticator;
 use Symfony\Component\Security\Http\Util\TargetPathTrait;
+use Symfony\Component\Serializer\SerializerInterface;
 
 //Through the security config file, the Guard authenticator is enable
 class LoginFormAuthenticator extends AbstractFormLoginAuthenticator
@@ -31,8 +33,11 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator
     private $passwordEncoder;
 
     //Add CsrfTokenManagerInterface $csrfTokenManager as parameter if using Symfony Form
-    public function __construct(EntityManagerInterface $entityManager, UrlGeneratorInterface $urlGenerator, UserPasswordEncoderInterface $passwordEncoder)
+    private $serializer;
+
+    public function __construct(EntityManagerInterface $entityManager, UrlGeneratorInterface $urlGenerator, UserPasswordEncoderInterface $passwordEncoder, SerializerInterface $serializer)
     {
+        $this->serializer = $serializer;
         $this->entityManager = $entityManager;
         $this->urlGenerator = $urlGenerator;
 //        $this->csrfTokenManager = $csrfTokenManager;
@@ -70,6 +75,7 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator
 
         $user = $this->entityManager->getRepository(User::class)->findOneBy(['mail' => $credentials['mail']]);
 
+
         if (!$user) {
             // fail authentication with a custom error
             throw new CustomUserMessageAuthenticationException('Mail could not be found.');
@@ -85,7 +91,19 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, $providerKey)
     {
-        return new JsonResponse("User connected");
+        $user = $request->getUser();
+
+        return new JsonResponse(
+            $this->serializer->serialize(
+                $user,
+                'json'
+            ),
+            Response::HTTP_OK,
+            [],
+            true
+        );
+
+//        return new JsonResponse("User connected");
     }
 
     protected function getLoginUrl()
