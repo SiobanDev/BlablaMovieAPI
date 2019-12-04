@@ -58,6 +58,7 @@ class SecurityController extends AbstractController
      */
     public function logout()
     {
+
         //throw new \Exception('You are no more connected.');
         $this->redirect('accueil', Response::HTTP_PERMANENTLY_REDIRECT);
     }

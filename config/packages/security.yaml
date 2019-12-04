@@ -44,8 +44,8 @@ security:
         # (this one will match URLs like /api/post/7298 and /api/comment/528491)
         #- { path: ^/api/(post|comment)/\d+$, roles: ROLE_USER }
         - { path: ^/$, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/users/me$, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/users/me$, roles: IS_AUTHENTICATED_REMEMBERED }
+        - { path: ^/logout$, roles: IS_AUTHENTICATED_REMEMBERED }
         - { path: ^/login$, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/user, roles: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/movies$, roles: IS_AUTHENTICATED_REMEMBERED }
         - { path: ^/historical$, roles: IS_AUTHENTICATED_REMEMBERED }

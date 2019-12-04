@@ -75,7 +75,6 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator
 
         $user = $this->entityManager->getRepository(User::class)->findOneBy(['mail' => $credentials['mail']]);
 
-
         if (!$user) {
             // fail authentication with a custom error
             throw new CustomUserMessageAuthenticationException('Mail could not be found.');
@@ -91,19 +90,7 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, $providerKey)
     {
-        $user = $request->getUser();
-
-        return new JsonResponse(
-            $this->serializer->serialize(
-                $user,
-                'json'
-            ),
-            Response::HTTP_OK,
-            [],
-            true
-        );
-
-//        return new JsonResponse("User connected");
+        return new JsonResponse("User connected");
     }
 
     protected function getLoginUrl()
