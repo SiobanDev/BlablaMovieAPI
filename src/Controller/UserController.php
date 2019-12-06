@@ -91,6 +91,7 @@ class UserController extends AbstractController
      * @param VoteService $voteService
      * @param SecurityController $securityController
      * @return void
+     * @throws Exception
      */
     public function deleteCurrentUser(VoteService $voteService, SecurityController $securityController)
     {
@@ -101,43 +102,39 @@ class UserController extends AbstractController
         return $securityController->logout();
     }
 
-//    /**
-//     * @Rest\Get("/users/me", name="connected_user")
-//     * @return JsonResponse
-//     * @throws Exception
-//     */
-//    public function getConnectedUser()
-//    {
-//        $user = $this->getUser();
-//
-//        dd('$user : ', $user);
-//
-//        if(!empty($user)) {
-//            var_dump('azeazeazeaeazeaze');
-//
-//            return new JsonResponse(
-//                $this->serializer->serialize(
-//                    [
-//                        "username" => $user->getLogin()
-//                    ],
-//                    'json'
-//                ),
-//                Response::HTTP_OK,
-//                [],
-//                true
-//            );
-//        }
-//
-//        return new JsonResponse(
-//            $this->serializer->serialize(
-//                [
-//                    "message" => 'YOU ARE NOT CONNECTED.'
-//                ],
-//                'json'
-//            ),
-//            Response::HTTP_FORBIDDEN,
-//            [],
-//            true
-//        );
-//    }
+    /**
+     * @Rest\Get("/users/me", name="connected_user")
+     * @return JsonResponse
+     * @throws Exception
+     */
+    public function getConnectedUser()
+    {
+        $user = $this->getUser();
+
+        if(!empty($user)) {
+            return new JsonResponse(
+                $this->serializer->serialize(
+                    [
+                        "username" => $user->getLogin()
+                    ],
+                    'json'
+                ),
+                Response::HTTP_OK,
+                [],
+                true
+            );
+        }
+
+        return new JsonResponse(
+            $this->serializer->serialize(
+                [
+                    "message" => 'YOU ARE NOT CONNECTED.'
+                ],
+                'json'
+            ),
+            Response::HTTP_FORBIDDEN,
+            [],
+            true
+        );
+    }
 }

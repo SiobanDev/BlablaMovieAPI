@@ -2,7 +2,9 @@
 
 namespace App\Service;
 
+use mysql_xdevapi\Exception;
 use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
 class OmdbApiService
 {
@@ -18,12 +20,17 @@ class OmdbApiService
     {
         $client = HttpClient::create();
 
-        $response = $client->request('GET', 'http://www.omdbapi.com/?apikey=' . $this->apiKey . '&s=space');
+        try {
+            $response = $client->request('GET', 'http://www.omdbapi.com/?apikey=' . $this->apiKey . '&s=space');
 
-        $statusCode = $response->getStatusCode();
+            $statusCode = $response->getStatusCode();
 
-        if ($statusCode === 200) {
-            return $response->getContent();
+            if ($statusCode === 200) {
+                return $response->getContent();
+            }
+
+        } catch (TransportExceptionInterface $e) {
+            throw new Exception($e);
         }
     }
 }

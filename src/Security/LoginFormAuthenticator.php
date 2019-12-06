@@ -20,6 +20,10 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 //use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Guard\Authenticator\AbstractFormLoginAuthenticator;
 use Symfony\Component\Security\Http\Util\TargetPathTrait;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Encoder\XmlEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\SerializerInterface;
 
 //Through the security config file, the Guard authenticator is enable
@@ -90,7 +94,13 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, $providerKey)
     {
-        return new JsonResponse("User connected");
+        $encoders = [new XmlEncoder(), new JsonEncoder()];
+        $normalizers = [new ObjectNormalizer()];
+        $serializer = new Serializer($normalizers, $encoders);
+
+        // get the login error if there is one
+        // last username entered by the user
+        return new JsonResponse($serializer->serialize("User connected", 'json'), Response::HTTP_OK, []);
     }
 
     protected function getLoginUrl()

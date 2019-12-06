@@ -13,7 +13,6 @@ use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
-use Cassandra\Exception\UnauthorizedException;
 
 class SecurityController extends AbstractController
 {
@@ -26,12 +25,22 @@ class SecurityController extends AbstractController
      */
     public function login(AuthenticationUtils $authenticationUtils, UserRepository $userRepository): Response
     {
+        $encoders = [new XmlEncoder(), new JsonEncoder()];
+        $normalizers = [new ObjectNormalizer()];
+        $serializer = new Serializer($normalizers, $encoders);
+
         // get the login error if there is one
         $error = $authenticationUtils->getLastAuthenticationError();
         // last username entered by the user
         $lastUsername = $authenticationUtils->getLastUsername();
 
-        return new JsonResponse($lastUsername);
+        if($error) {
+            return new JsonResponse($serializer->serialize($error, 'json'), Response::HTTP_BAD_REQUEST, [], true);
+        } else if($lastUsername) {
+            return new JsonResponse($serializer->serialize($lastUsername, 'json'), Response::HTTP_OK, [], true);
+        }
+
+        return null;
 
 //        $encoders = [new XmlEncoder(), new JsonEncoder()];
 //        $normalizers = [new ObjectNormalizer()];
@@ -55,11 +64,11 @@ class SecurityController extends AbstractController
 
     /**
      * @Route("/logout", name="app_logout")
+     * @throws Exception
      */
     public function logout()
     {
-
-        //throw new \Exception('You are no more connected.');
-        $this->redirect('accueil', Response::HTTP_PERMANENTLY_REDIRECT);
+        throw new \Exception('You are no more connected.');
+//        $this->redirect('accueil', Response::HTTP_PERMANENTLY_REDIRECT);
     }
 }

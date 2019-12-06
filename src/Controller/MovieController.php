@@ -10,7 +10,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 class MovieController extends AbstractController
 {
     /**
-     *
      * @Rest\Get("/movies", name="movies")
      * @param OmdbApiService $omdbApiService
      * @return JsonResponse
@@ -18,7 +17,6 @@ class MovieController extends AbstractController
     public function displayAll(OmdbApiService $omdbApiService)
     {
         $moviesData = $omdbApiService->displayAll();
-
         return new JsonResponse($moviesData, 200, [], true);
     }
 }
