@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Controller;
-
 use App\Repository\UserRepository;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -13,7 +11,6 @@ use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
-
 class SecurityController extends AbstractController
 {
     /**
@@ -28,20 +25,16 @@ class SecurityController extends AbstractController
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
         $serializer = new Serializer($normalizers, $encoders);
-
         // get the login error if there is one
         $error = $authenticationUtils->getLastAuthenticationError();
         // last username entered by the user
         $lastUsername = $authenticationUtils->getLastUsername();
-
         if($error) {
             return new JsonResponse($serializer->serialize($error, 'json'), Response::HTTP_BAD_REQUEST, [], true);
         } else if($lastUsername) {
             return new JsonResponse($serializer->serialize($lastUsername, 'json'), Response::HTTP_OK, [], true);
         }
-
         return null;
-
 //        $encoders = [new XmlEncoder(), new JsonEncoder()];
 //        $normalizers = [new ObjectNormalizer()];
 //        $serializer = new Serializer($normalizers, $encoders);
@@ -61,7 +54,6 @@ class SecurityController extends AbstractController
 //
 //        return new JsonResponse($serializer->serialize($response, 'json'), Response::HTTP_OK, [], true);
     }
-
     /**
      * @Route("/logout", name="app_logout")
      * @throws Exception

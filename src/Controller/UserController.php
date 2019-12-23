@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Controller;
-
 use App\Repository\UserRepository;
 use App\Service\User\UserService;
 use App\Service\Vote\VoteService;
@@ -16,14 +14,12 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-
 class UserController extends AbstractController
 {
     private $serializer;
     private $entityManager;
     private $userRepository;
     private $userService;
-
     /**
      * UserController constructor.
      * @param SerializerInterface $serializer
@@ -42,7 +38,6 @@ class UserController extends AbstractController
         $this->userRepository = $userRepository;
         $this->userService = $userService;
     }
-
     /**
      * To test the function with Postman, you need to set a mail and a password keys in the body parameters (form-data)
      * @Rest\Post("/user", name="add_user")
@@ -55,11 +50,18 @@ class UserController extends AbstractController
         Request $request,
         ValidatorInterface $validator)
     {
-        try{
+        try {
             $user = $this->userService->add($request, $validator, $this->entityManager, $this->userRepository);
-
+            return new JsonResponse(
+                $this->serializer->serialize(
+                    $user,
+                    'json'
+                ),
+                Response::HTTP_CREATED,
+                [],
+                true
+            );
         } catch (\Exception $e) {
-
             return new JsonResponse(
                 $this->serializer->serialize(
                     [
@@ -72,18 +74,7 @@ class UserController extends AbstractController
                 true
             );
         }
-
-        return new JsonResponse(
-            $this->serializer->serialize(
-                $user,
-                'json'
-            ),
-            Response::HTTP_CREATED,
-            [],
-            true
-        );
     }
-
     /**
      * Http verb DELETE don't need to return a JsonResponse !
      *
@@ -96,12 +87,9 @@ class UserController extends AbstractController
     public function deleteCurrentUser(VoteService $voteService, SecurityController $securityController)
     {
         $user = $this->getUser();
-
         $this->userService->delete($this->entityManager, $this->userRepository, $voteService, $user);
-
         return $securityController->logout();
     }
-
     /**
      * @Rest\Get("/users/me", name="connected_user")
      * @return JsonResponse
@@ -110,31 +98,8 @@ class UserController extends AbstractController
     public function getConnectedUser()
     {
         $user = $this->getUser();
-
-        if(!empty($user)) {
-            return new JsonResponse(
-                $this->serializer->serialize(
-                    [
-                        "username" => $user->getLogin()
-                    ],
-                    'json'
-                ),
-                Response::HTTP_OK,
-                [],
-                true
-            );
-        }
-
-        return new JsonResponse(
-            $this->serializer->serialize(
-                [
-                    "message" => 'YOU ARE NOT CONNECTED.'
-                ],
-                'json'
-            ),
-            Response::HTTP_FORBIDDEN,
-            [],
-            true
-        );
+        return $this->json([
+            "username" => $user->getLogin()
+        ]);
     }
 }
