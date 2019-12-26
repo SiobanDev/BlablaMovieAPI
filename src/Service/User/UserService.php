@@ -1,5 +1,6 @@
 <?php
 namespace App\Service\User;
+
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\Vote\VoteService;
@@ -54,7 +55,6 @@ class UserService
         $birthDate = new DateTime($request->request->get('birth_date'));
         $user->setBirthDate($birthDate);
         $user->setInscriptionDate(new DateTime());
-        $user->setApiToken(bin2hex(openssl_random_pseudo_bytes(12)));
         $errors = $validator->validate($user);
         if (count($errors) > 0) {
             /*

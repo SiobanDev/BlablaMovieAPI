@@ -52,6 +52,7 @@ class UserController extends AbstractController
     {
         try {
             $user = $this->userService->add($request, $validator, $this->entityManager, $this->userRepository);
+
             return new JsonResponse(
                 $this->serializer->serialize(
                     $user,
@@ -91,7 +92,7 @@ class UserController extends AbstractController
         return $securityController->logout();
     }
     /**
-     * @Rest\Get("/users/me", name="connected_user")
+     * @Rest\Get("/api/users/me", name="connected_user")
      * @return JsonResponse
      * @throws Exception
      */

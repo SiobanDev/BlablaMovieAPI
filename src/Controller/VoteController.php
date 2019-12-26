@@ -52,7 +52,7 @@ class VoteController extends AbstractController
     /**
      * To test the function with Postman, you need to set a 'imdbID' key in the body parameter form-data.
      *
-     * @Rest\Post("/vote", name="add_vote")
+     * @Rest\Post("/api/vote", name="add_vote")
      * @param Request $request
      * @param ValidatorInterface $validator
      * @param WeekService $checkService
@@ -124,7 +124,7 @@ class VoteController extends AbstractController
     /**
      * To test the function with Postman, you need to set a 'imdbID' key in the body parameter form-data.
      *
-     * @Rest\Get("/votes", name="all_votes")
+     * @Rest\Get("/api/votes", name="all_votes")
      * @return JsonResponse
      */
     public
@@ -141,7 +141,7 @@ class VoteController extends AbstractController
     /**
      * To test the function with Postman, you need to set a 'vote_id' key in the headers parameters
      *
-     * @Rest\Delete("/vote", name="remove_vote")
+     * @Rest\Delete("/api/vote", name="remove_vote")
      * @param EntityManagerInterface $entityManager
      * @param WeekService $checkService
      * @return JsonResponse
