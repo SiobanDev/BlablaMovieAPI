@@ -11,28 +11,42 @@ security:
         # used to reload user from session & other features (e.g. switch_user)
         app_user_provider:
             entity:
-                class: App\Entity\User
-                property: mail
+                class: 'App\Entity\User'
+                property: 'mail'
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
 
-        main:
-            anonymous: ~
+        login:
+            pattern:  ^/api/login
+            stateless: true
+            anonymous: true
+            json_login:
+                check_path:               /api/login_check
+                success_handler:          lexik_jwt_authentication.handler.authentication_success
+                failure_handler:          lexik_jwt_authentication.handler.authentication_failure
+
+        api:
+            pattern:   ^/api
+            stateless: true
             guard:
                 authenticators:
-                    - App\Security\LoginFormAuthenticator
-            logout:
-                path: app_logout
+                    - lexik_jwt_authentication.jwt_token_authenticator
+
                 # where to redirect after logout
                 # target: app_any_route
 
-            # if you want, disable storing the user in the session
-            # stateless: true
+                # if you want, disable storing the user in the session
+            #      stateless: true
 
             # https://symfony.com/doc/current/security/impersonating_user.html
             # switch_user: true
+
+        main:
+            anonymous: ~
+            logout:
+                path: app_logout
 
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
@@ -43,5 +57,11 @@ security:
         # the 'path' value can be any valid regular expression
         # (this one will match URLs like /api/post/7298 and /api/comment/528491)
         #- { path: ^/api/(post|comment)/\d+$, roles: ROLE_USER }
-        - { path: ^/login$, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/votation$, roles: ROLE_USER }
+        - { path: ^/$, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/api/users/me$, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/logout$, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/user$, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/api/movies$, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/historical$, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }

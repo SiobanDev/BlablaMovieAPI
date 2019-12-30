@@ -3,12 +3,16 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\VoteRepository")
  */
 class Vote
 {
+    const GROUP_SELF = "Vote::self";
+    const GROUP_VOTER = "Vote::voter";
+
     /**
      * @ORM\Id()
      * @ORM\GeneratedValue()
@@ -17,57 +21,63 @@ class Vote
     private $id;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\ManyToOne(targetEntity="App\Entity\User", inversedBy="votations")
+     * @ORM\JoinColumn
+     * @Groups({Vote::GROUP_VOTER})
      */
-    private $movie_title;
+    private $voter;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
-    private $movie_poster;
-
-    /**
+     * @var \DateTimeInterface
      * @ORM\Column(type="datetime")
+     * @Groups({Vote::GROUP_SELF})
      */
-    private $vote_date;
+    private $votationDate;
+
+    /**
+     * @var string
+     * @ORM\Column(type="string", length=255)
+     * @Groups({Vote::GROUP_SELF})
+     */
+    private $movieId;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getMovieTitle(): ?string
+    public function getVoter(): ?User
     {
-        return $this->movie_title;
+        return $this->voter;
     }
 
-    public function setMovieTitle(string $movie_title): self
+    public function setVoter(?User $voter): self
     {
-        $this->movie_title = $movie_title;
+        $this->voter = $voter;
 
         return $this;
     }
 
-    public function getMoviePoster(): ?string
+    public function getVotationDate(): ?\DateTimeInterface
     {
-        return $this->movie_poster;
+        return $this->votationDate;
     }
 
-    public function setMoviePoster(?string $movie_poster): self
+    public function setVotationDate(\DateTimeInterface $votationDate): self
     {
-        $this->movie_poster = $movie_poster;
+        $this->votationDate = $votationDate;
 
         return $this;
     }
 
-    public function getVoteDate(): ?\DateTimeInterface
+    public function getMovieId(): ?string
     {
-        return $this->vote_date;
+        return $this->movieId;
     }
 
-    public function setVoteDate(\DateTimeInterface $vote_date): self
+    public function setMovieId(string $movieId): self
     {
-        $this->vote_date = $vote_date;
+        $this->movieId = $movieId;
 
         return $this;
     }

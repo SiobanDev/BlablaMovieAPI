@@ -2,8 +2,11 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -11,6 +14,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 class User implements UserInterface
 {
+    const GROUP_SELF = "User::self";
+    const GROUP_VOTATIONS = "User::votations";
+
     /**
      * @ORM\Id()
      * @ORM\GeneratedValue()
@@ -32,6 +38,7 @@ class User implements UserInterface
      *      maxMessage = "Your first name cannot be longer than {{ limit }} characters"
      * )
      * @Assert\Regex("#[A-Za-z0-9]#")
+     * @Groups({User::GROUP_SELF})
      */
     private $login;
 
@@ -50,8 +57,7 @@ class User implements UserInterface
      *     message="The value {{ value }} is not a valid {{ type }}.")
      * @Assert\Length(
      *      min = 12,
-     *      minMessage = "Your first name must be at least {{ limit }} characters long"
-     * )
+     *      minMessage = "Your first name must be at least {{ limit }} characters long")
      */
     private $password;
 
@@ -59,7 +65,9 @@ class User implements UserInterface
      * @ORM\Column(type="string", length=255, unique=true)
      * @Assert\NotBlank(message="The email must be defined.")
      * @Assert\NotNull(message="The email can't be null.")
-     * @Assert\Email(message="The email '{{ value }}' is not a valid email.")
+     * @Assert\Email(
+     *     message="The email '{{ value }}' is not a valid email.")
+     * @Groups({User::GROUP_SELF})
      */
     private $mail;
 
@@ -68,19 +76,32 @@ class User implements UserInterface
      * @Assert\NotBlank(message="The date of birth must be defined.")
      * @Assert\NotNull(message="The date of birth can't be null.")
      * @Assert\Date
-     * @var string A "d-m-Y" formatted value
+     * @var \DateTimeInterface
+     * @Groups({User::GROUP_SELF})
      */
-    private $birth_date;
+    private $birthDate;
 
     /**
      * @ORM\Column(type="datetime")
      * @Assert\NotBlank(message="The date of inscription must be defined.")
      * @Assert\NotNull(message="The date of inscription can't be null.")
      * @Assert\Date
-     * @var string A "Y-m-d" formatted value
+     * @var \DateTimeInterface
      * @Assert\GreaterThanOrEqual("-16 years")
+     * @Groups({User::GROUP_SELF})
      */
-    private $inscription_date;
+    private $inscriptionDate;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\Vote", mappedBy="voter", orphanRemoval=true)
+     * @Groups({User::GROUP_VOTATIONS})
+     */
+    private $votations;
+
+    public function __construct()
+    {
+        $this->votations = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -174,24 +195,55 @@ class User implements UserInterface
 
     public function getBirthDate(): ?\DateTimeInterface
     {
-        return $this->birth_date;
+        return $this->birthDate;
     }
 
-    public function setBirthDate(\DateTimeInterface $birth_date): self
+    public function setBirthDate(\DateTimeInterface $birthDate): self
     {
-        $this->birth_date = $birth_date;
+        $this->birthDate = $birthDate;
 
         return $this;
     }
 
     public function getInscriptionDate(): ?\DateTimeInterface
     {
-        return $this->inscription_date;
+        return $this->inscriptionDate;
     }
 
-    public function setInscriptionDate(\DateTimeInterface $inscription_date): self
+    public function setInscriptionDate(\DateTimeInterface $inscriptionDate): self
     {
-        $this->inscription_date = $inscription_date;
+        $this->inscriptionDate = $inscriptionDate;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Vote[]
+     */
+    public function getVotations(): Collection
+    {
+        return $this->votations;
+    }
+
+    public function addVotation(Vote $votation): self
+    {
+        if (!$this->votations->contains($votation)) {
+            $this->votations[] = $votation;
+            $votation->setVoter($this);
+        }
+
+        return $this;
+    }
+
+    public function removeVotation(Vote $votation): self
+    {
+        if ($this->votations->contains($votation)) {
+            $this->votations->removeElement($votation);
+            // set the owning side to null (unless already changed)
+            if ($votation->getVoter() === $this) {
+                $votation->setVoter(null);
+            }
+        }
 
 
         return $this;

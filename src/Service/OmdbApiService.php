@@ -7,25 +7,29 @@ use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
 class OmdbApiService
 {
-    public function getMovies()
+    /** @var string */
+    private $apiKey;
+
+    public function __construct(string $apiKey)
     {
-        $apiKey = getenv('OMDB_API_KEY');
+        $this->apiKey = $apiKey;
+    }
+
+    public function displayAll()
+    {
         $client = HttpClient::create();
 
         try {
-            $response = $client->request('GET', 'http://www.omdbapi.com/?apikey=' . $apiKey . '&s=space');
+            $response = $client->request('GET', 'http://www.omdbapi.com/?apikey=' . $this->apiKey . '&s=space');
+
+            $statusCode = $response->getStatusCode();
+
+            if ($statusCode === 200) {
+                return $response->getContent();
+            }
 
         } catch (TransportExceptionInterface $e) {
-            throw $e;
-        }
-
-        $statusCode = $response->getStatusCode();
-
-        if ($statusCode === 200) {
-
-            $content = $response->getContent();
-
-            return $content;
+            throw new Exception($e);
         }
     }
 }

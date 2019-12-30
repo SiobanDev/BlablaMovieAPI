@@ -20,3 +20,8 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Entity'
                 prefix: 'App\Entity'
                 alias: App
+        dql:
+            # Register custom DQL functions (see: https://github.com/beberlei/DoctrineExtensions/blob/master/config/mysql.yml)
+            datetime_functions:
+                date: DoctrineExtensions\Query\Mysql\Date
+                datesub: DoctrineExtensions\Query\Mysql\DateSub
